@@ -160,3 +160,14 @@ class VideoPipeline:
         return mask
     
 
+if __name__ == "__main__":
+    pipeline = VideoPipeline(
+        videoPath="vids/s1.mp4",
+        outputDir="output"
+    )
+
+    pipeline.extractFrames()
+    pipeline.segmentCornea(modelPath="models/best_segformer_b0_cornea")
+    pipeline.segmentBar(modelPath="models/best_segformer_b0_cornea")
+    pipeline.computeIntersections()
+    pipeline.computeHorizontalDistance()
