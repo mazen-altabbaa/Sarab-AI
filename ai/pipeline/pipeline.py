@@ -82,3 +82,29 @@ class VideoPipeline:
 
             intersection = np.logical_and(corneaMask, barMask).astype(np.uint8)
             self.saveMaskJson(intersection, self.intersectionDir, f"intersection_{count}.json")
+
+
+    def computeHorizontalDistance(self):
+            disDir = os.path.join(os.path.dirname(self.intersectionDir), "horizontalDis")
+            os.makedirs(disDir, exist_ok=True)
+            maxDis = 0
+    
+            for fname in sorted(os.listdir(self.intersectionDir)):
+                mask = self.loadMaskJson(os.path.join(self.intersectionDir, fname))
+                distances = []
+                for row in range(mask.shape[0]):
+                    cols = np.where(mask[row] == 1)[0]
+                    if len(cols) == 0:
+                        continue
+                    dis = int(cols[-1] - cols[0])
+                    if dis > 0:
+                        distances.append(dis)
+                        if dis > maxDis:
+                            maxDis = dis
+    
+                count = fname.replace("intersection_", "").replace(".json", "")
+                outputPath = os.path.join(disDir, f"horizontalDis{count}.json")
+                with open(outputPath, "w") as f:
+                    json.dump({"distances": distances}, f)
+    
+            print(f"the maximum horizontal dis across all masks: {maxDis} px")
