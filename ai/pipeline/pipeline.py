@@ -19,3 +19,16 @@ class VideoPipeline:
 
         for d in [self.framesDir, self.corneaDir, self.barDir, self.intersectionDir]:
             os.makedirs(d, exist_ok=True)
+
+    def extractFrames(self):
+        cap = cv2.VideoCapture(self.videoPath)
+        count = 1
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            cv2.imwrite(os.path.join(self.framesDir, f"img_{count}.jpg"), frame)
+            count += 1
+        cap.release()
+        
+        print(f"extracted {count-1} frames")
