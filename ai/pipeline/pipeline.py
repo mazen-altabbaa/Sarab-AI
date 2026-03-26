@@ -60,4 +60,25 @@ class VideoPipeline:
             mask = cv2.resize(mask, (w, h), interpolation=cv2.INTER_NEAREST)
 
             count = os.path.splitext(fname)[0].split("_")[1]
-            self._save_mask_json(mask, self.cornea_dir, f"segmentedCornea_{count}.json")
+            self.saveMaskJson(mask, self.corneaDir, f"segmentedCornea_{count}.json")
+
+
+    def computeIntersections(self):
+        corneaFiles = sorted(os.listdir(self.corneaDir))
+
+        for cf in corneaFiles:
+            count = cf.replace("segmentedCornea_", "").replace(".json", "")
+            bf = f"segmentedBar_{count}.json"
+
+            corneaPath = os.path.join(self.corneaDir, cf)
+            barPath    = os.path.join(self.barDir, bf)
+
+            if not os.path.exists(barPath):
+                print(f"there is no matching bar file for frame {count}!!!!")
+                continue
+
+            corneaMask = self.loadMaskJson(corneaPath)
+            barMask    = self.loadMaskJson(barPath)
+
+            intersection = np.logical_and(corneaMask, barMask).astype(np.uint8)
+            self.saveMaskJson(intersection, self.intersectionDir, f"intersection_{count}.json")
