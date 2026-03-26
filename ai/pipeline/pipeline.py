@@ -30,5 +30,34 @@ class VideoPipeline:
             cv2.imwrite(os.path.join(self.framesDir, f"img_{count}.jpg"), frame)
             count += 1
         cap.release()
-        
+
         print(f"extracted {count-1} frames")
+
+    def segmentCornea(self, modelPath, threshold=0.5, imgSize=512):
+        model = SegformerForSemanticSegmentation.from_pretrained(modelPath)
+        model.to(self.device).eval()
+
+        transform = A.Compose([
+            A.Resize(imgSize, imgSize),
+            A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ToTensorV2(),
+        ])
+
+        for fname in sorted(os.listdir(self.framesDir)):
+            imgBGR = cv2.imread(os.path.join(self.framesDir, fname))
+            imgRGB = cv2.cvtColor(imgBGR, cv2.COLOR_BGR2RGB)
+            h, w = imgBGR.shape[:2]
+
+            tensor = transform(image=imgRGB)["image"].unsqueeze(0).to(self.device)
+
+            with torch.no_grad():
+                logits = model(pixel_values=tensor).logits
+                if logits.shape[1] > 1:
+                    logits = logits[:, 1:2]
+                prob = torch.sigmoid(logits).cpu().numpy()[0, 0]
+
+            mask = (prob > threshold).astype(np.uint8)
+            mask = cv2.resize(mask, (w, h), interpolation=cv2.INTER_NEAREST)
+
+            count = os.path.splitext(fname)[0].split("_")[1]
+            self._save_mask_json(mask, self.cornea_dir, f"segmentedCornea_{count}.json")
