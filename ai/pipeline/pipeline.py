@@ -108,3 +108,23 @@ class VideoPipeline:
                     json.dump({"distances": distances}, f)
     
             print(f"the maximum horizontal dis across all masks: {maxDis} px")
+
+
+    def saveMaskJson(self, mask, folder, filename):
+        coords = np.argwhere(mask == 1).tolist()
+        with open(os.path.join(folder, filename), "w") as f:
+            json.dump({"coordinates": coords}, f)
+
+
+    def loadMaskJson(self, path):
+        with open(path) as f:
+            data = json.load(f)
+        coords = data["coordinates"]
+        if not coords:
+            return np.zeros((1, 1), dtype=np.uint8)
+
+        coords = np.array(coords)
+        h, w = coords[:, 0].max() + 1, coords[:, 1].max() + 1
+        mask = np.zeros((h, w), dtype=np.uint8)
+        mask[coords[:, 0], coords[:, 1]] = 1
+        return mask
