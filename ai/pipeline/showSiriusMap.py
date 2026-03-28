@@ -172,3 +172,48 @@ def createCompositeMap(blocks, cmap=None, norm=None, figsize=(15, 5)):
     
     plt.tight_layout()
     return fig
+
+def visualizeCorneaFile(filename, savePlots=False):
+    cmap, norm, thicknessValues, colors, boundaries = createCustomColormap()
+    
+    print("Custom colormap created with discrete colors at:")
+    for t, c in zip(thicknessValues, colors):
+        print(f"  {t} µm -> {c}")
+    
+    blocks = loadCorneaFile(filename)
+    
+    if not blocks:
+        return
+    
+    for i, block in enumerate(blocks):
+        data = np.array(block)
+        validMask = data > -900
+        validCount = np.sum(validMask)
+        missingCount = np.sum(data <= -900)
+        totalCount = data.size
+        validPercent = validCount / totalCount * 100
+        missingPercent = missingCount / totalCount * 100
+
+        if validCount > 0:
+            validData = data[validMask]
+            validIndices = np.where(validMask.flatten())[0][:5]
+            validValues = data.flatten()[validIndices]
+            for val in validValues:
+                idx = getClosestColorIndex(val, thicknessValues)
+                print(f"    {val:.1f} µm -> {colors[idx]} (closest to {thicknessValues[idx]} µm)")
+
+    for i, block in enumerate(blocks):
+        data = np.array(block)
+        if np.any(data > -900):
+            fig = createCircularMap(block, cmap=cmap, norm=norm)
+            plt.show()
+            
+            if savePlots:
+                fig.savefig(f"corneaImg.png", dpi=150, bbox_inches='tight')
+    
+    if len(blocks) > 1:
+        fig = createCompositeMap(blocks, cmap=cmap, norm=norm)
+        plt.show()
+        
+        if savePlots:
+            fig.savefig("corneaImg.png", dpi=150, bbox_inches='tight')
