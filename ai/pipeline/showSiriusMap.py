@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, BoundaryNorm
 from matplotlib.cm import ScalarMappable
 import os
-
+import cv2
 
 def createCustomColormap():
     colorMapping = [
@@ -217,3 +217,32 @@ def visualizeCorneaFile(filename, savePlots=False):
         
         if savePlots:
             fig.savefig("corneaImg.png", dpi=150, bbox_inches='tight')
+
+
+def rotateImage(filename="corneaImg.png", output="rotatedImg.png"):
+    image = cv2.imread(filename)
+    if image is None:
+        return
+    
+    height, width = image.shape[:2]
+    center = (width // 2, height // 2)
+    angle = 90
+    scale = 1.0
+    
+    getRotationMat = cv2.getRotationMatrix2D(center, angle, scale)
+    
+    cos = abs(getRotationMat[0, 0])
+    sin = abs(getRotationMat[0, 1])
+    nwidth = int((height * sin) + (width * cos))
+    nheight = int((height * cos) + (width * sin))
+    
+    getRotationMat[0, 2] += (nwidth / 2) - center[0]
+    getRotationMat[1, 2] += (nheight / 2) - center[1]
+    
+    rotImage = cv2.warpAffine(image, getRotationMat, (nwidth, nheight))
+    
+    reversedImg = cv2.flip(rotImage, 1)
+    
+    cv2.imwrite(output, reversedImg)
+    
+
