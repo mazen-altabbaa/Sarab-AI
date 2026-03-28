@@ -66,3 +66,47 @@ def getClosestColorIndex(value, thicknessValues):
             else:
                 return i+1
     return len(thicknessValues) - 1
+
+
+def loadCorneaFile(filename):
+    fileExtension = os.path.splitext(filename)[1].lower()    
+    with open(filename, 'r') as file:
+        content = file.read()
+    
+    return parseCornealData(content)
+
+def parseCornealData(fileContent):
+    lines = [line.strip() for line in fileContent.strip().split('\n')]
+    
+    blocks = []
+    currentBlock = []
+    
+    for lineNum, line in enumerate(lines):
+        if line.startswith('CornealThickness') or line.startswith('"CornealThickness"'):
+            continue
+            
+        if not line:
+            if currentBlock:
+                blocks.append(currentBlock)
+                currentBlock = []
+        else:
+            line = line.replace('"', '').replace(',', ';')
+            
+            values = []
+            for x in line.split(';'):
+                x = x.strip()
+                if x:
+                    try:
+                        x = x.replace(',', '.')
+                        values.append(float(x))
+                    except ValueError:
+                        continue
+            
+            if values:
+                currentBlock.append(values)
+    
+    if currentBlock:
+        blocks.append(currentBlock)
+    
+    return blocks
+
