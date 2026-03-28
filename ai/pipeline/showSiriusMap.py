@@ -52,3 +52,17 @@ def createCustomColormap():
     norm = BoundaryNorm(boundaries, cmap.N, clip=True)
     
     return cmap, norm, thicknessValues, colors, boundaries
+
+def getClosestColorIndex(value, thicknessValues):
+    if value <= thicknessValues[0]:
+        return 0
+    if value >= thicknessValues[-1]:
+        return len(thicknessValues) - 1
+    
+    for i in range(len(thicknessValues) - 1):
+        if thicknessValues[i] <= value <= thicknessValues[i+1]:
+            if value - thicknessValues[i] < thicknessValues[i+1] - value:
+                return i
+            else:
+                return i+1
+    return len(thicknessValues) - 1
