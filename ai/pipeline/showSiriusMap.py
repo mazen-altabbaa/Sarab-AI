@@ -110,3 +110,65 @@ def parseCornealData(fileContent):
     
     return blocks
 
+def createCircularMap(dataBlock, cmap=None, norm=None, figsize=(10, 10)):
+    data = np.array(dataBlock)
+    nRings, nMeridians = data.shape
+
+    maskedData = np.ma.masked_where(data <= -900, data)
+    
+    theta = np.linspace(0, 2*np.pi, nMeridians, endpoint=False)
+    r = np.linspace(0, 1, nRings)
+    
+    R, Theta = np.meshgrid(r, theta, indexing='ij')
+    
+    fig = plt.figure(figsize=figsize)
+    ax = plt.subplot(1, 1, 1, projection='polar')
+    
+    mesh = ax.pcolormesh(Theta, R, maskedData, cmap=cmap, norm=norm, shading='auto')
+    
+    ax.set_theta_zero_location('N')
+    ax.set_theta_direction(-1)
+    
+    for i in range(1, min(nRings, 6)):
+        circleRadius = i / nRings
+        circle = plt.Circle((0, 0), circleRadius, transform=ax.transData._b, 
+                           fill=False, color='gray', alpha=0.5, linewidth=0.5)
+        ax.add_patch(circle)
+    
+    ax.grid(False)
+    ax.set_yticklabels([])
+    ax.set_xticklabels([])
+    ax.set_xticks([])
+    
+    plt.tight_layout()
+    return fig
+
+def createCompositeMap(blocks, cmap=None, norm=None, figsize=(15, 5)):
+    nBlocks = len(blocks)
+    fig, axes = plt.subplots(1, nBlocks, figsize=figsize, 
+                             subplot_kw={'projection': 'polar'})
+    
+    if nBlocks == 1:
+        axes = [axes]
+    
+    for idx, (ax, block) in enumerate(zip(axes, blocks)):
+        data = np.array(block)
+        nRings, nMeridians = data.shape
+        
+        maskedData = np.ma.masked_where(data <= -900, data)
+        
+        theta = np.linspace(0, 2*np.pi, nMeridians, endpoint=False)
+        r = np.linspace(0, 1, nRings)
+        R, Theta = np.meshgrid(r, theta, indexing='ij')
+        
+        mesh = ax.pcolormesh(Theta, R, maskedData, cmap=cmap, norm=norm, shading='auto')
+        
+        ax.set_theta_zero_location('N')
+        ax.set_theta_direction(-1)
+        ax.grid(False)
+        ax.set_yticklabels([])
+        ax.set_xticklabels([])
+        ax.set_xticks([])
+    
+    plt.tight_layout()
+    return fig
