@@ -3,3 +3,52 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, BoundaryNorm
 from matplotlib.cm import ScalarMappable
 import os
+
+
+def createCustomColormap():
+    colorMapping = [
+        (170, '#f5cecf'),
+        (200, '#ffa6b0'),
+        (230, '#fc8b8c'),
+        (260, '#f97d7b'),
+        (290, '#f4605d'),
+        (320, '#fb4548'),
+        (350, '#fc180d'),
+        (380, '#fe3300'),
+        (410, '#f47504'),
+        (440, '#f9d500'),
+        (470, '#fff710'),
+        (500, '#b1fa0c'),
+        (530, '#00fe07'),
+        (560, '#03be41'),
+        (590, '#00a855'),
+        (620, '#098c6a'),
+        (650, '#0546b4'),
+        (680, '#0216e6'),
+        (710, '#0000fa'),
+        (740, '#0000e7'),
+        (770, '#0100dc'),
+        (800, '#0300c6'),
+        (830, '#00019f'),
+        (860, '#00006c'),
+        (890, '#000030'),
+        (920, '#000022'),
+        (950, '#000015'),
+        (980, '#000008')
+    ]
+    
+    colorMapping.sort(key=lambda x: x[0])
+    
+    thicknessValues = [cm[0] for cm in colorMapping]
+    colors = [cm[1] for cm in colorMapping]
+    
+    boundaries = [thicknessValues[0] - 15]
+    for i in range(len(thicknessValues) - 1):
+        midpoint = (thicknessValues[i] + thicknessValues[i+1]) / 2
+        boundaries.append(midpoint)
+    boundaries.append(thicknessValues[-1] + 15)
+    
+    cmap = LinearSegmentedColormap.from_list('custom_cornea', colors, N=len(colors))
+    norm = BoundaryNorm(boundaries, cmap.N, clip=True)
+    
+    return cmap, norm, thicknessValues, colors, boundaries
