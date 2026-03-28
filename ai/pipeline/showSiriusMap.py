@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, BoundaryNorm
@@ -246,3 +247,17 @@ def rotateImage(filename="corneaImg.png", output="rotatedImg.png"):
     cv2.imwrite(output, reversedImg)
     
 
+if __name__ == "__main__":    
+    filename = "data.csv"
+    
+    if len(sys.argv) > 1:
+        filename = sys.argv[1]
+    
+    if not os.path.exists(filename):
+        dataFiles = [f for f in os.listdir('.') if f.endswith(('.txt', '.csv'))]
+        if dataFiles:
+            for f in dataFiles:
+                print(f"  {f}")
+    else:
+        visualizeCorneaFile(filename, savePlots=True)
+        rotateImage()
