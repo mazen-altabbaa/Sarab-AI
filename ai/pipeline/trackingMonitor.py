@@ -284,3 +284,7 @@ class PipelineTracker:
             self.root.after_cancel(state["afterId"])
             state["afterId"] = None
 
+
+
+if __name__ == "__main__":
+    PipelineTracker(outputRoot="output")
