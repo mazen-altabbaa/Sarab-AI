@@ -45,3 +45,25 @@ class PipelineTracker:
         for r, c in coords:
             draw.point((c, r), fill=color)
         return Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB")
+
+    def toTk(self, img, maxW=1100, maxH=650):
+        img.thumbnail((maxW, maxH))
+        return ImageTk.PhotoImage(img)
+
+    def clearWindow(self):
+        for w in self.root.winfo_children():
+            w.destroy()
+
+    def buildMainMenu(self):
+        self.clearWindow()
+        self.root.title("Pipeline Tracker – Main Menu")
+        tk.Label(self.root, text="Pipeline Tracker", font=("Arial", 20, "bold")).pack(pady=30)
+
+        modes = [
+            ("Cornea Segmentation", lambda: self.buildMaskViewer("cornea")),
+            ("Bar Segmentation", lambda: self.buildMaskViewer("bar")),
+            ("Intersection Segmentation", lambda: self.buildMaskViewer("intersection")),
+            ("Horizontal Spans", self.buildSpanViewer),
+        ]
+        for label, cmd in modes:
+            tk.Button(self.root, text=label, width=30, height=2, command=cmd).pack(pady=8)
