@@ -220,3 +220,67 @@ class PipelineTracker:
                 pass
 
         show()
+
+    def highlightSpanLine(self, frame, framecount, linecount):
+        intersectFiles = self.sortedFiles(self.intersectDir, "intersection_")
+        if framecount >= len(intersectFiles):
+            return frame
+
+        coords = self.loadMask(os.path.join(self.intersectDir, intersectFiles[framecount]))
+        if not coords:
+            return frame
+
+        mask = np.zeros((frame.height, frame.width), dtype=np.uint8)
+        for r, c in coords:
+            if r < frame.height and c < frame.width:
+                mask[r, c] = 1
+
+        activeRows = []
+        for row in range(mask.shape[0]):
+            cols = np.where(mask[row] == 1)[0]
+            if len(cols) >= 2 and int(cols[-1] - cols[0]) > 0:
+                activeRows.append((row, int(cols[0]), int(cols[-1])))
+
+        img = frame.copy()
+        draw = ImageDraw.Draw(img)
+        if linecount < len(activeRows):
+            row, start, end = activeRows[linecount]
+            draw.line([(start, row), (end, row)], fill=(0, 100, 255), width=2)
+        return img
+
+    def step(self, state, d, total, showFn):
+        state["count"] = max(0, min(total - 1, state["count"] + d))
+        showFn()
+
+    def jump(self, state, entry, total, showFn):
+        try:
+            v = int(entry.get()) - 1
+            state["count"] = max(0, min(total - 1, v))
+            showFn()
+        except ValueError:
+            pass
+
+    def toggleStream(self, state, total, showFn, btn):
+        if state["streaming"]:
+            self.stopStream(state)
+            btn.config(text="▶ Start Stream")
+        else:
+            state["streaming"] = True
+            btn.config(text="⏹ Stop Stream")
+            self.streamNext(state, total, showFn, btn)
+
+    def streamNext(self, state, total, showFn, btn):
+        if not state["streaming"] or state["count"] >= total - 1:
+            self.stopStream(state)
+            btn.config(text="▶ Start Stream")
+            return
+        state["count"] += 1
+        showFn()
+        state["afterId"] = self.root.after(100, lambda: self.streamNext(state, total, showFn, btn))
+
+    def stopStream(self, state):
+        state["streaming"] = False
+        if state.get("afterId"):
+            self.root.after_cancel(state["afterId"])
+            state["afterId"] = None
+
