@@ -19,15 +19,3 @@ services:
               capabilities: [gpu]
     depends_on:
       - whisper
-
-  segformer:
-    image: segformer-pipeline:v2
-    ports:
-      - "10000:8000"
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
