@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Alert,
   BackHandler,
@@ -16,18 +17,23 @@ import {
 
 import { ProfileMenuItem } from '../../components/profile/profileMenuItem';
 import { ProfilePicture } from '../../components/profile/profilePicture';
-import { Colors } from '../../constants/colors';
+import { useAuth } from '../../hooks/useAuth';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { useUserStore } from '../../store/useUserStore';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const Colors = useThemeColors();
+  const styles = createStyles(Colors);
+  const { logout } = useAuth();
   
-  const { userName, userImage, logout: logoutStore } = useUserStore();
+  const { userName, userImage } = useUserStore();
   
   const [isFullImageVisible, setIsFullImageVisible] = useState(false);
 
   const handleBack = () => {
-    router.replace('/(tabs)'); 
+    router.back();
   };
 
   useEffect(() => {
@@ -37,13 +43,13 @@ export default function ProfileScreen() {
   }, []);
 
   const handleLogout = () => {
-    Alert.alert("Logout", "Are you sure you want to exit?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t('profile.logout'), t('profile.logout_message'), [
+      { text: t('common.cancel'), style: "cancel" },
       { 
-        text: "Logout", 
+        text: t('profile.logout'),
         style: "destructive", 
-        onPress: () => {
-          logoutStore(); 
+        onPress: async () => {
+          await logout();
           router.replace('/login'); 
         } 
       }
@@ -56,7 +62,7 @@ export default function ProfileScreen() {
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
           <Ionicons name="chevron-back" size={28} color={Colors.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Profile</Text>
+        <Text style={styles.headerTitle}>{t('profile.title')}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -64,32 +70,32 @@ export default function ProfileScreen() {
   
         <View style={styles.imageSection}>
           <ProfilePicture 
-            imageUri={userImage} 
+            imageUri={userImage}
             size={125}
             showControls={false} 
             onView={() => userImage && setIsFullImageVisible(true)}
           />
-          <Text style={styles.userName}>{userName || 'User Name'}</Text>
+          <Text style={styles.userName}>{userName || t('profile.fallback_name')}</Text>
         </View>
 
         <View style={styles.menuContainer}>
           <ProfileMenuItem 
-            title="Profile Manager" 
+            title={t('profile.manager')}
             icon="person-outline" 
             onPress={() => router.push('/profilemanager')} 
           />
           <ProfileMenuItem 
-            title="Settings" 
+            title={t('profile.settings')}
             icon="settings-outline" 
             onPress={() => router.push('/settings')} 
           />
           <ProfileMenuItem 
-            title="Help Center" 
+            title={t('profile.help')}
             icon="help-circle-outline" 
             onPress={() => router.push('/help')} 
           />
           <ProfileMenuItem 
-            title="Logout" 
+            title={t('profile.logout')}
             icon="log-out-outline" 
             onPress={handleLogout} 
           />
@@ -110,8 +116,8 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+const createStyles = (Colors: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: Colors.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -178,7 +184,7 @@ const styles = StyleSheet.create({
     borderColor: 'white',
     zIndex: 2,
   },
-  userName: { fontSize: 24, fontWeight: 'bold', marginTop: 15, color: '#333' },
+  userName: { fontSize: 24, fontWeight: 'bold', marginTop: 15, color: Colors.text },
   menuContainer: { width: '100%', paddingHorizontal: 25 },
 
   modalBackground: {

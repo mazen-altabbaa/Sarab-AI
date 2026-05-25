@@ -1,6 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -11,10 +12,15 @@ import Animated, {
 
 // استيراد المكونات والثوابت من ملفاتها الجديدة
 import { SarabLogo } from '../components/sarabLogo';
-import { Colors } from '../constants/colors';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { useUserStore } from '../store/useUserStore';
 
 export default function UnifiedAuthScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const Colors = useThemeColors();
+  const styles = createStyles(Colors);
+  const isLoggedIn = useUserStore((state) => state.isLoggedIn);
 
   // --- قيم الحركة ---
   const contentOpacity = useSharedValue(0); 
@@ -41,10 +47,14 @@ export default function UnifiedAuthScreen() {
     transform: [{ translateY: buttonsTranslateY.value }],
   }));
 
+  if (isLoggedIn) {
+    return <Redirect href="/(tabs)" />;
+  }
+
   return (
     <View style={styles.container}>
-      {/* شريط الحالة الشفاف لضمان عدم حدوث قفزة في الشعار */}
-      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+      {/* شريط الحالة بلون التطبيق الأساسي حتى تظهر أيقونات النظام بوضوح */}
+      <StatusBar translucent backgroundColor={Colors.primary} barStyle="light-content" />
       
       <LinearGradient
         colors={Colors.gradient}
@@ -60,26 +70,26 @@ export default function UnifiedAuthScreen() {
             style={styles.loginButton} 
             onPress={() => router.push('/login')}
           >
-            <Text style={styles.loginButtonText}>Log In</Text>
+            <Text style={styles.loginButtonText}>{t('auth.login')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
             style={styles.signUpButton} 
             onPress={() => router.push('/signup')}
           >
-            <Text style={styles.signUpButtonText}>Sign Up</Text>
+            <Text style={styles.signUpButtonText}>{t('auth.signup')}</Text>
           </TouchableOpacity>
         </Animated.View>
       </LinearGradient>
-      // اضفه مؤقتاً في أي مكان
-<TouchableOpacity onPress={() => router.push('/(tabs)')}>
-  <Text style={{color: 'gray', textAlign: 'center'}}>Debug: Go to Home</Text>
-</TouchableOpacity>
+      {/* اضفه مؤقتاً في أي مكان */}
+      <TouchableOpacity onPress={() => router.push('/(tabs)')}>
+        <Text style={{color: 'gray', textAlign: 'center'}}>Debug: Go to Home</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: any) => StyleSheet.create({
   container: { 
     flex: 1 
   },

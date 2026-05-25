@@ -12,9 +12,12 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 export default function SetPasswordScreen() {
   const router = useRouter();
+  const Colors = useThemeColors();
+  const styles = createStyles(Colors);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -28,7 +31,7 @@ export default function SetPasswordScreen() {
       >
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={28} color="#b39ddb" />
+            <Ionicons name="chevron-back" size={28} color={Colors.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Set Password</Text>
         </View>
@@ -40,7 +43,7 @@ export default function SetPasswordScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="***************"
-                placeholderTextColor="#ccc"
+                placeholderTextColor={Colors.placeholder}
                 secureTextEntry={!showPassword}
                 value={password}
                 onChangeText={setPassword}
@@ -49,7 +52,7 @@ export default function SetPasswordScreen() {
                 <Ionicons
                   name={showPassword ? "eye-outline" : "eye-off-outline"}
                   size={22}
-                  color="#333"
+                  color={Colors.text}
                 />
               </TouchableOpacity>
             </View>
@@ -61,7 +64,7 @@ export default function SetPasswordScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="***************"
-                placeholderTextColor="#ccc"
+                placeholderTextColor={Colors.placeholder}
                 secureTextEntry={!showConfirmPassword}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
@@ -70,7 +73,7 @@ export default function SetPasswordScreen() {
                 <Ionicons
                   name={showConfirmPassword ? "eye-outline" : "eye-off-outline"}
                   size={22}
-                  color="#333"
+                  color={Colors.text}
                 />
               </TouchableOpacity>
             </View>
@@ -90,10 +93,10 @@ export default function SetPasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -109,7 +112,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#b39ddb',
+    color: Colors.primary,
   },
   content: {
     paddingHorizontal: 30,
@@ -121,13 +124,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
+    color: Colors.text,
     marginBottom: 10,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9ff', 
+    backgroundColor: Colors.inputBg,
     borderRadius: 15,
     paddingHorizontal: 15,
     height: 55,
@@ -135,16 +138,16 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
+    color: Colors.text,
   },
   createButton: {
-    backgroundColor: '#b39ddb', 
+    backgroundColor: Colors.primary,
     height: 60,
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 40,
-    shadowColor: '#9580ff',
+    shadowColor: Colors.secondary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,

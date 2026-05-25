@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Colors } from '../../constants/colors';
+import { useThemeColors } from '../../hooks/useThemeColors';
+import type { AnalysisResult } from '../../store/useUserStore';
 
 interface HistoryItemProps {
   item: {
@@ -8,15 +9,19 @@ interface HistoryItemProps {
     title: string;
     time: string;
     date: string;
+    result: AnalysisResult;
   };
-  onPress: (id: string) => void;
+  onPress: () => void;
 }
 
 export const HistoryItem = ({ item, onPress }: HistoryItemProps) => {
+  const Colors = useThemeColors();
+  const styles = createStyles(Colors);
+
   return (
     <TouchableOpacity 
       style={styles.historyItem} 
-      onPress={() => onPress(item.id)}
+      onPress={onPress}
       activeOpacity={0.7}
     >
       <View style={styles.infoColumn}>
@@ -30,17 +35,17 @@ export const HistoryItem = ({ item, onPress }: HistoryItemProps) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: any) => StyleSheet.create({
   historyItem: {
     padding: 15,
-    backgroundColor: '#f3f0ff',
+    backgroundColor: Colors.bgLight,
     borderRadius: 15,
     marginBottom: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e1d7f5', 
+    borderColor: Colors.borderPurple,
   },
   infoColumn: {
     flex: 1,
@@ -48,19 +53,19 @@ const styles = StyleSheet.create({
   itemTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.primary || '#b39ddb',
+    color: Colors.primary,
     marginBottom: 4,
   },
   timeText: {
     fontSize: 13,
-    color: '#b39ddb',
+    color: Colors.primary,
     fontWeight: '500',
   },
   dateColumn: {
     alignItems: 'flex-end',
   },
   dateText: { 
-    color: '#b39ddb', 
+    color: Colors.primary,
     fontSize: 12,
     fontWeight: 'bold'
   }

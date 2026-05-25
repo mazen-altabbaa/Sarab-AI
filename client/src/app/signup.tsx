@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
+  ActivityIndicator,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -11,83 +13,139 @@ import {
   View
 } from 'react-native';
 
-// استيراد المكونات والثوابت الاحترافية
 import { SarabInput } from '../components/sarabInput';
-import { Colors } from '../constants/colors';
+import { useAuth } from '../hooks/useAuth';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 export default function SignUpScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const Colors = useThemeColors();
+  const { signup, isLoading, error, clearError } = useAuth();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const role = 'Contributor';
+  const canSubmit = Boolean(firstName.trim() && lastName.trim() && email.trim() && password.trim());
+  const styles = createStyles(Colors);
+
+  const validateEmail = (value: string) => /\S+@\S+\.\S+/.test(value.trim());
+  const validatePassword = (value: string) => value.trim().length >= 8;
+
+  const handleSignUp = async () => {
+    if (!canSubmit) {
+      setValidationError(t('auth.required_signup'));
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setValidationError(t('auth.invalid_email'));
+      return;
+    }
+
+    if (!validatePassword(password)) {
+      setValidationError(t('auth.short_password'));
+      return;
+    }
+
+    setValidationError(null);
+
+    try {
+      await signup({ firstName: firstName.trim(), lastName: lastName.trim(), email: email.trim(), password: password.trim(), role });
+      router.replace('/(tabs)');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('auth.signup_failed');
+      setValidationError(message);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      
-      {/* Header - متناسق تماماً مع شاشة Login */}
+      <StatusBar translucent backgroundColor={Colors.primary} barStyle="light-content" />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.push('/')} style={styles.backButton}>
           <Ionicons name="chevron-back" size={28} color={Colors.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>New Account</Text>
+        <Text style={styles.headerTitle}>{t('auth.signup_title')}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        
-        {/* Full Name */}
-        <SarabInput 
-          label="Full name"
-          placeholder="Enter your full name"
+        <SarabInput
+          label={t('auth.first_name')}
+          placeholder={t('auth.first_name_placeholder')}
+          value={firstName}
+          onChangeText={(text) => {
+            setFirstName(text);
+            setValidationError(null);
+            clearError();
+          }}
         />
 
-        {/* Email */}
-        <SarabInput 
-          label="Email"
-          placeholder="example@example.com"
+        <SarabInput
+          label={t('auth.last_name')}
+          placeholder={t('auth.last_name_placeholder')}
+          value={lastName}
+          onChangeText={(text) => {
+            setLastName(text);
+            setValidationError(null);
+            clearError();
+          }}
+        />
+
+        <SarabInput
+          label={t('auth.email')}
+          placeholder={t('auth.email_placeholder')}
           keyboardType="email-address"
+          value={email}
+          onChangeText={(text) => {
+            setEmail(text);
+            setValidationError(null);
+            clearError();
+          }}
         />
 
-        {/* Password */}
-        <SarabInput 
-          label="Password"
-          placeholder="***************"
-          isPassword={true}
+        <SarabInput
+          label={t('auth.password')}
+          placeholder={t('auth.password_placeholder')}
+          isPassword
           secureTextEntry={!passwordVisible}
           togglePassword={() => setPasswordVisible(!passwordVisible)}
+          value={password}
+          onChangeText={(text) => {
+            setPassword(text);
+            setValidationError(null);
+            clearError();
+          }}
         />
 
-        {/* Mobile Number */}
-        <SarabInput 
-          label="Mobile Number"
-          placeholder="+963 xxxxxxxxx"
-          keyboardType="phone-pad"
-        />
+        {validationError || error ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{validationError || error}</Text>
+          </View>
+        ) : null}
 
-        {/* Academic Document - حقل رفع الملفات بتصميمه الخاص */}
-        <View style={styles.inputSection}>
-          <Text style={styles.label}>University ID or Graduation Certificate</Text>
-          <TouchableOpacity style={styles.uploadWrapper}>
-            <Ionicons name="cloud-upload-outline" size={24} color={Colors.primary} />
-            <Text style={styles.uploadText}>Upload document image</Text>
-          </TouchableOpacity>
-          <Text style={styles.helperText}>* Required for account verification</Text>
-        </View>
-
-        {/* Terms */}
         <Text style={styles.termsText}>
-          By continuing, you agree to {'\n'}
-          <Text style={styles.linkText}>Terms of Use</Text> and <Text style={styles.linkText}>Privacy Policy.</Text>
+          {t('auth.terms_prefix')} {'\n'}
+          <Text style={styles.linkText}>{t('auth.terms')}</Text> and <Text style={styles.linkText}>{t('auth.privacy')}</Text>
         </Text>
 
-        {/* Sign Up Button */}
-        <TouchableOpacity style={styles.mainButton}>
-          <Text style={styles.buttonText}>Sign Up</Text>
+        <TouchableOpacity
+          style={[styles.mainButton, (!canSubmit || isLoading) && styles.disabledButton]}
+          onPress={handleSignUp}
+          disabled={!canSubmit || isLoading}
+          activeOpacity={0.8}
+          accessibilityState={{ disabled: !canSubmit || isLoading }}
+        >
+          {isLoading ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.buttonText}>{t('auth.signup')}</Text>}
         </TouchableOpacity>
 
-        {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Already have an account? </Text>
+          <Text style={styles.footerText}>{t('auth.already_have_account')}</Text>
           <TouchableOpacity onPress={() => router.push('/login')}>
-            <Text style={styles.linkText}>Log in</Text>
+            <Text style={styles.linkText}>{t('auth.login')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -95,70 +153,36 @@ export default function SignUpScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: Colors.white 
+const createStyles = (Colors: any) => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background
   },
-  header: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    height: 60, 
-    marginTop: 40, 
-  },
-  backButton: { position: 'absolute', left: 20 },
-  headerTitle: { 
-    fontSize: 24, 
-    fontWeight: 'bold', 
-    color: Colors.primary 
-  },
-  content: { 
-    paddingHorizontal: 30, 
-    paddingTop: 20,
-    paddingBottom: 40 
-  },
-  inputSection: { marginBottom: 18 },
-  label: { 
-    fontSize: 16, 
-    fontWeight: '600', 
-    color: Colors.textMain, 
-    marginBottom: 10,
-    marginLeft: 5 
-  },
-  
-  // تنسيق حقل رفع الملفات المخصص
-  uploadWrapper: {
-    backgroundColor: Colors.lightBg,
-    borderRadius: 15,
-    height: 65,
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 20,
-    borderStyle: 'dashed',
-    borderWidth: 1.5,
-    borderColor: Colors.primary,
+    height: 60,
+    marginTop: 40,
   },
-  uploadText: {
-    color: Colors.primary,
-    fontSize: 15,
-    marginLeft: 10,
-    fontWeight: '500',
+  backButton: { position: 'absolute', left: 20 },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: Colors.primary
   },
-  helperText: {
-    fontSize: 11,
+  content: {
+    paddingHorizontal: 30,
+    paddingTop: 20,
+    paddingBottom: 40,
+    flexGrow: 1,
+  },
+  termsText: {
+    textAlign: 'center',
     color: Colors.textSecondary,
-    marginTop: 5,
-    marginLeft: 5,
-  },
-
-  termsText: { 
-    textAlign: 'center', 
-    color: Colors.textSecondary, 
-    fontSize: 13, 
+    fontSize: 13,
     marginTop: 15,
-    lineHeight: 20 
+    lineHeight: 20
   },
   mainButton: {
     backgroundColor: Colors.primary,
@@ -173,16 +197,32 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 5,
   },
+  disabledButton: {
+    backgroundColor: Colors.softPurple,
+    opacity: 0.65,
+  },
   buttonText: { color: Colors.white, fontSize: 20, fontWeight: 'bold' },
-  footer: { 
-    flexDirection: 'row', 
-    justifyContent: 'center', 
-    marginTop: 30 
+  errorBox: {
+    backgroundColor: 'rgba(211, 47, 47, 0.08)',
+    borderColor: 'rgba(211, 47, 47, 0.25)',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+  },
+  errorText: {
+    color: '#d32f2f',
+    lineHeight: 20,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 30
   },
   footerText: { color: Colors.textSecondary, fontSize: 15 },
-  linkText: { 
-    color: Colors.primary, 
+  linkText: {
+    color: Colors.primary,
     fontWeight: 'bold',
-    fontSize: 15 
+    fontSize: 15
   }
 });

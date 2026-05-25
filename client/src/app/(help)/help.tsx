@@ -1,6 +1,7 @@
 import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Platform,
   SafeAreaView,
@@ -11,9 +12,13 @@ import {
   View,
 } from 'react-native';
 
-import { Colors } from '../../constants/theme';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 const ContactOption = ({ item, isOpen, onPress }: { item: any, isOpen: boolean, onPress: () => void }) => {
+  const { t } = useTranslation();
+  const Colors = useThemeColors();
+  const styles = createStyles(Colors);
+
   return (
     <View style={styles.optionWrapper}>
       <TouchableOpacity 
@@ -29,7 +34,7 @@ const ContactOption = ({ item, isOpen, onPress }: { item: any, isOpen: boolean, 
               <FontAwesome5 name={item.icon} size={20} color="#fff" />
             )}
           </View>
-          <Text style={styles.optionText}>{item.title}</Text>
+          <Text style={styles.optionText}>{t(item.titleKey)}</Text>
         </View>
         <Ionicons 
           name={isOpen ? "chevron-up" : "chevron-down"} 
@@ -41,7 +46,7 @@ const ContactOption = ({ item, isOpen, onPress }: { item: any, isOpen: boolean, 
       {isOpen && (
         <View style={styles.accordionContent}>
           <Text style={styles.accordionText}>
-            We are here to help you via {item.title}. Our team usually responds within 24 hours.
+            {t('help.response_message', { channel: t(item.titleKey) })}
           </Text>
         </View>
       )}
@@ -51,13 +56,16 @@ const ContactOption = ({ item, isOpen, onPress }: { item: any, isOpen: boolean, 
 
 export default function HelpCenterScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const Colors = useThemeColors();
+  const styles = createStyles(Colors);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const contactOptions = [
-    { id: '1', title: 'Customer Service', icon: 'headphones', type: 'MaterialCommunityIcons' },
-    { id: '2', title: 'Website', icon: 'earth', type: 'MaterialCommunityIcons' },
-    { id: '3', title: 'Whatsapp', icon: 'whatsapp', type: 'FontAwesome5' },
-    { id: '4', title: 'Instagram', icon: 'instagram', type: 'MaterialCommunityIcons' },
+    { id: '1', titleKey: 'help.customer_service', icon: 'headphones', type: 'MaterialCommunityIcons' },
+    { id: '2', titleKey: 'help.website', icon: 'earth', type: 'MaterialCommunityIcons' },
+    { id: '3', titleKey: 'help.whatsapp', icon: 'whatsapp', type: 'FontAwesome5' },
+    { id: '4', titleKey: 'help.instagram', icon: 'instagram', type: 'MaterialCommunityIcons' },
   ];
 
   const toggleAccordion = (id: string) => {
@@ -71,9 +79,9 @@ export default function HelpCenterScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="chevron-back" size={28} color="white" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Help Center</Text>
+          <Text style={styles.headerTitle}>{t('help.title')}</Text>
         </View>
-        <Text style={styles.headerSubtitle}>How Can We Help You?</Text>
+        <Text style={styles.headerSubtitle}>{t('help.subtitle')}</Text>
       </View>
 
       <ScrollView 
@@ -81,7 +89,7 @@ export default function HelpCenterScreen() {
         showsVerticalScrollIndicator={false}
       >
         <TouchableOpacity style={styles.contactUsButton} activeOpacity={0.8}>
-          <Text style={styles.contactUsText}>Contact Us</Text>
+          <Text style={styles.contactUsText}>{t('help.contact_us')}</Text>
         </TouchableOpacity>
 
         {contactOptions.map((item) => (
@@ -97,11 +105,11 @@ export default function HelpCenterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+const createStyles = (Colors: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: Colors.background },
   
   purpleHeader: {
-    backgroundColor: Colors.primary || '#b39ddb',
+    backgroundColor: Colors.primary,
     paddingTop: Platform.OS === 'android' ? 50 : 20,
     paddingBottom: 40,
     paddingHorizontal: 20,
@@ -121,7 +129,7 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 25, paddingTop: 30, paddingBottom: 50 },
   
   contactUsButton: {
-    backgroundColor: Colors.primary || '#b39ddb',
+    backgroundColor: Colors.primary,
     borderRadius: 25,
     height: 50,
     justifyContent: 'center',
@@ -138,7 +146,7 @@ const styles = StyleSheet.create({
 
   optionWrapper: {
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: Colors.borderPurple,
     marginBottom: 5,
   },
   optionItem: {
@@ -152,12 +160,12 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Colors.primary || '#b39ddb',
+    backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
   },
-  optionText: { fontSize: 16, fontWeight: '600', color: '#333' },
+  optionText: { fontSize: 16, fontWeight: '600', color: Colors.text },
   
   accordionContent: {
     paddingLeft: 59, 
@@ -166,7 +174,7 @@ const styles = StyleSheet.create({
   },
   accordionText: {
     fontSize: 14,
-    color: '#777',
+    color: Colors.textSecondary,
     lineHeight: 20,
   },
 });

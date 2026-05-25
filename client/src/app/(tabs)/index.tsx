@@ -1,30 +1,28 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Dimensions,
   Image,
-  Platform,
   ScrollView,
-  StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
+  StyleSheet,
+  Platform
 } from 'react-native';
-
 import { ActionButtons } from '../../components/home/actionButtons';
 import { CameraModal } from '../../components/home/cameraModal';
 import { VideoCard } from '../../components/home/videoCard';
+import { AnalysisResultModal } from '../../components/home/AnalysisResultModal';
 import { DarkTheme, LightTheme } from '../../constants/theme'; 
 import { useVideoManager } from '../../hooks/useVideoManager';
-import { useUserStore } from '../../store/useUserStore';
+import { useUserStore, AnalysisResult } from '../../store/useUserStore';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
 const CONTAINER_PADDING = 25;
-const ACTUAL_AVAILABLE_WIDTH = SCREEN_WIDTH - (CONTAINER_PADDING * 2);
-const VIDEO_CARD_WIDTH = ACTUAL_AVAILABLE_WIDTH;
+const VIDEO_CARD_WIDTH = SCREEN_WIDTH - (CONTAINER_PADDING * 2);
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -32,24 +30,68 @@ export default function HomeScreen() {
   const { userName, userImage, theme } = useUserStore(); 
 
   const Colors = theme === 'dark' ? DarkTheme : LightTheme;
-
   const { videos, addVideo, pickVideoFile, removeVideo } = useVideoManager(2);
   const [isCameraOpen, setCameraOpen] = useState(false);
+  
+  const [resultVisible, setResultVisible] = useState(false);
+  const [analysisData, setAnalysisData] = useState<AnalysisResult | null>(null);
+  const [hasResults, setHasResults] = useState(false);
+  const [ignoreHistory, setIgnoreHistory] = useState(false);
+  const handleResetResults = () => {
+    setHasResults(false);
+    setAnalysisData(null);
+    setResultVisible(false);
+    setIgnoreHistory(true);
+    useUserStore.getState().setPendingAnalysisResult(null);
+  };
+
+  const pendingResult = useUserStore(state => state.pendingAnalysisResult);
+  const setPendingResult = useUserStore(state => state.setPendingAnalysisResult);
+  const analysisHistory = useUserStore(state => state.analysisHistory);
+
+  useEffect(() => {
+    if (pendingResult) {
+      setAnalysisData(pendingResult);
+      setResultVisible(true);
+      setHasResults(true);
+      setIgnoreHistory(false);
+      setPendingResult(null);
+      return;
+    }
+
+    if (!ignoreHistory && !hasResults && analysisHistory.length > 0) {
+      setHasResults(true);
+    }
+  }, [pendingResult, analysisHistory.length, hasResults, ignoreHistory, setPendingResult]);
 
   const handleStartAnalysis = () => {
-    if (videos.length < 2) return;
-    router.push({
-      pathname: '/survey',
-      params: { videoUris: JSON.stringify(videos) }
-    });
+    if (hasResults) {
+      if (!analysisData && analysisHistory.length > 0) {
+        setAnalysisData(analysisHistory[0]);
+      }
+      setResultVisible(true);
+    } else {
+      if (videos.length < 2) return;
+      setIgnoreHistory(false);
+      const videoData = {
+        left2right: videos[0],
+        right2left: videos[1]
+      };
+      router.push({
+        pathname: '/survey',
+        params: { videoUris: JSON.stringify(videoData) }
+      });
+    }
   };
 
   const dynamicStyles = createStyles(Colors);
+  const isAnalysisDisabled = videos.length < 2 && !hasResults;
 
   return (
     <View style={dynamicStyles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100, flexGrow: 1 }}>
         
+        {/* Header Section */}
         <View style={dynamicStyles.header}>
           <View style={dynamicStyles.profileSection}>
             <TouchableOpacity onPress={() => router.push('/profile')}>
@@ -65,7 +107,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
             <View>
               <Text style={dynamicStyles.welcomeText}>{t('home.welcome')}</Text>
-              <Text style={dynamicStyles.userName}>{userName || 'User'}</Text>
+              <Text style={dynamicStyles.userName}>{userName || 'Yasser'}</Text>
             </View>
           </View>
           <TouchableOpacity onPress={() => router.push('/settings')}>
@@ -74,6 +116,7 @@ export default function HomeScreen() {
         </View>
 
         <ActionButtons 
+          colors={Colors}
           onCameraPress={() => setCameraOpen(true)} 
           onUploadPress={pickVideoFile} 
           count={videos.length}
@@ -82,6 +125,7 @@ export default function HomeScreen() {
           orLabel={t('home.or')}
         />
 
+        {/* Display Area */}
         <View style={dynamicStyles.displayArea}>
           {videos.length > 0 ? (
             <ScrollView 
@@ -96,12 +140,11 @@ export default function HomeScreen() {
                   key={index} 
                   uri={uri} 
                   index={index} 
-                  title={index === 0 ? t('home.sample_1') : t('home.sample_2')}
+                  title={index === 0 ? t('home.left_to_right') : t('home.right_to_left')}
                   onRemove={removeVideo} 
                   width={VIDEO_CARD_WIDTH} 
                 />
               ))}
-              
               {videos.length === 1 && (
                 <View style={[dynamicStyles.videoCardPlaceholder, { width: VIDEO_CARD_WIDTH }]}>
                    <MaterialCommunityIcons name="video-plus-outline" size={50} color={Colors.primary} style={{opacity: 0.2}} />
@@ -117,26 +160,41 @@ export default function HomeScreen() {
           )}
         </View>
 
+        {/* Start Analysis Button */}
         <View style={dynamicStyles.analysisSection}>
             <TouchableOpacity 
-              style={[dynamicStyles.brainIconContainer, videos.length < 2 && dynamicStyles.disabledBrain]} 
+              style={[dynamicStyles.brainIconContainer, isAnalysisDisabled && dynamicStyles.disabledBrain]} 
               onPress={handleStartAnalysis}
               activeOpacity={0.7}
-              disabled={videos.length < 2}
+              disabled={isAnalysisDisabled}
             >
-              <MaterialCommunityIcons name="brain" size={42} color="white" />
+              <MaterialCommunityIcons 
+                name={hasResults ? "file-chart" : "brain"} 
+                size={42} 
+                color={isAnalysisDisabled ? Colors.placeholder : Colors.primary} 
+              />
             </TouchableOpacity>
-            <Text style={[dynamicStyles.analysisLabel, videos.length < 2 && {color: Colors.placeholder}]}>
-              {t('home.start_analysis')}
+            <Text style={[dynamicStyles.analysisLabel, isAnalysisDisabled && { color: Colors.placeholder }]}>
+              {hasResults ? t('home.view_results') : t('home.start_analysis')}
             </Text>
         </View>
       </ScrollView>
 
+      {/* Camera Modal */}
       <CameraModal 
         visible={isCameraOpen} 
         onClose={() => setCameraOpen(false)} 
         onSave={addVideo} 
         videoCount={videos.length}
+      />
+
+      {/* Analysis Result Modal */}
+      <AnalysisResultModal 
+        visible={resultVisible} 
+        onClose={() => setResultVisible(false)} 
+        data={analysisData}
+        colors={Colors}
+        onReset={handleResetResults}
       />
     </View>
   );
@@ -227,16 +285,20 @@ const createStyles = (Colors: any) => StyleSheet.create({
     width: 85, 
     height: 85, 
     borderRadius: 45, 
-    backgroundColor: Colors.primary, 
+    backgroundColor: Colors.bgLight, 
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
     justifyContent: 'center', 
     alignItems: 'center', 
-    elevation: 8,
+    elevation: 2,                     
     shadowColor: Colors.primary, 
-    shadowOpacity: 0.3, 
-    shadowRadius: 10 
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08, 
+    shadowRadius: 4 
   },
   disabledBrain: { 
-    backgroundColor: Colors.placeholder, 
+    backgroundColor: Colors.inputBg,  
+    borderColor: Colors.placeholder,
     elevation: 0, 
     shadowOpacity: 0 
   },

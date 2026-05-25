@@ -20,6 +20,7 @@ export const VideoCard = ({ uri, index, title, onRemove, width }: VideoCardProps
           useNativeControls 
           resizeMode={ResizeMode.COVER} 
           isLooping 
+          shouldPlay
         />
 
         <TouchableOpacity style={styles.deleteBtn} onPress={() => onRemove(index)}>

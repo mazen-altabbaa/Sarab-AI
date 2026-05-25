@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Video } from 'expo-av';
+import { ResizeMode, Video } from 'expo-av';
 import { CameraView } from 'expo-camera';
 import React, { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Colors } from '../../constants/colors';
 
@@ -13,6 +14,7 @@ interface CameraModalProps {
 }
 
 export const CameraModal = ({ visible, onClose, onSave, videoCount }: CameraModalProps) => {
+  const { t } = useTranslation();
   const cameraRef = useRef<any>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [tempVideoUri, setTempVideoUri] = useState<string | null>(null);
@@ -65,20 +67,20 @@ export const CameraModal = ({ visible, onClose, onSave, videoCount }: CameraModa
           </CameraView>
         ) : (
           <View style={styles.previewContainer}>
-            <Text style={styles.previewTitle}>Save this sample?</Text>
+            <Text style={styles.previewTitle}>{t('camera.save_sample')}</Text>
             <Video 
               source={{ uri: tempVideoUri }} 
               style={styles.previewVideo} 
               useNativeControls 
-              resizeMode="contain" 
+              resizeMode={ResizeMode.CONTAIN}
               shouldPlay 
             />
             <View style={styles.previewButtons}>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setTempVideoUri(null)}>
-                <Text style={styles.btnText}>Retake</Text>
+                <Text style={styles.btnText}>{t('camera.retake')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirmSave}>
-                <Text style={styles.btnText}>Confirm Video {videoCount + 1}</Text>
+                <Text style={styles.btnText}>{t('camera.confirm_video', { count: videoCount + 1 })}</Text>
               </TouchableOpacity>
             </View>
           </View>

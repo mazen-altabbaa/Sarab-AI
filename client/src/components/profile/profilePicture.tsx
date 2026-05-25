@@ -1,16 +1,21 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Colors } from '../../constants/theme';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface ProfilePictureProps {
   imageUri: string | null;
-  onPick: () => void;
-  onRemove: () => void;
+  size?: number;
+  showControls?: boolean;
+  onPick?: () => void;
+  onRemove?: () => void;
   onView: () => void;
 }
 
-export const ProfilePicture = ({ imageUri, onPick, onRemove, onView }: ProfilePictureProps) => {
+export const ProfilePicture = ({ imageUri, size = 125, showControls = true, onPick, onRemove, onView }: ProfilePictureProps) => {
+  const Colors = useThemeColors();
+  const styles = createStyles(Colors, size);
+
   return (
     <View style={styles.outerContainer}> 
       <View style={styles.imageWrapper}>
@@ -32,11 +37,13 @@ export const ProfilePicture = ({ imageUri, onPick, onRemove, onView }: ProfilePi
           </View>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.editBadge} onPress={onPick}>
-          <Ionicons name="pencil" size={16} color="#fff" />
-        </TouchableOpacity>
+        {showControls && onPick && (
+          <TouchableOpacity style={styles.editBadge} onPress={onPick}>
+            <Ionicons name="pencil" size={16} color="#fff" />
+          </TouchableOpacity>
+        )}
 
-        {imageUri && (
+        {showControls && imageUri && onRemove && (
           <TouchableOpacity style={styles.deleteBadge} onPress={onRemove}>
             <Ionicons name="trash-outline" size={16} color="#fff" />
           </TouchableOpacity>
@@ -46,7 +53,7 @@ export const ProfilePicture = ({ imageUri, onPick, onRemove, onView }: ProfilePi
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: any, size: number) => StyleSheet.create({
   outerContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -55,17 +62,17 @@ const styles = StyleSheet.create({
   },
   imageWrapper: { 
     position: 'relative', 
-    width: 125, 
-    height: 125,
+    width: size,
+    height: size,
   },
   circle: { 
-    width: 125, 
-    height: 125, 
-    borderRadius: 62.5, 
+    width: size,
+    height: size,
+    borderRadius: size / 2,
     borderWidth: 2, 
-    borderColor: Colors.bgLight || '#f3f0ff', 
+    borderColor: Colors.bgLight,
     overflow: 'hidden', 
-    backgroundColor: Colors.bgLight || '#f3f0ff',
+    backgroundColor: Colors.bgLight,
   },
   image: { width: '100%', height: '100%', resizeMode: 'cover' },
   absoluteCenter: {
@@ -80,7 +87,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 5, 
     bottom: 0, 
-    backgroundColor: Colors.primary || '#b39ddb',
+    backgroundColor: Colors.primary,
     width: 34,
     height: 34,
     borderRadius: 17,

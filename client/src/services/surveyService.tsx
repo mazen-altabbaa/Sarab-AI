@@ -5,24 +5,52 @@ export const surveyService = {
   // 1. الواجهة الأولى: إرسال بيانات الاستبيان والفيديوهات
   submitSurvey: async (formData: any, videos: string[]) => {
     try {
+      // 1. إنشاء كائن FormData لإرسال البيانات كـ Multipart
       const data = new FormData();
-      Object.keys(formData).forEach(key => data.append(key, formData[key]));
 
+      // 2. إضافة بيانات الاستبيان من الكائن formData
+      Object.keys(formData).forEach(key => {
+        if (formData[key] !== null && formData[key] !== undefined) {
+          data.append(key, formData[key]);
+        }
+      });
+
+      // 3. معالجة ورفع الفيديوهات
       videos.forEach((uri, index) => {
-        const filename = uri.split('/').pop() || `video_${index}.mp4`;
+        const customFileName = index === 0 ? 'left2right.mp4' : 'right2left.mp4';
+        
         data.append('Videos', {
-          uri: Platform.OS === 'android' ? uri : uri.replace('file://', ''),
-          name: filename,
-          type: 'video/mp4',
+          uri: Platform.OS === 'ios' ? uri.replace('file://', '') : uri,
+          name: customFileName,
+          type: 'video/mp4', 
         } as any);
       });
 
-      const response = await axios.post(`http://10.28.2.207:5027/api/Samples/upload/sarab-ai`, data, {
-        headers: { 'Accept': 'application/json', 'Content-Type': 'multipart/form-data' },
-        transformRequest: (data) => data, // لمنع axios من تحويل البيانات إلى JSON
-      });
+      // 4. إرسال الطلب باستخدام Axios
+      const response = await axios.post(
+        `http://10.252.172.15:5027/api/Samples/upload/sarab-ai`, 
+        data, 
+        {
+          headers: { 
+            'Accept': 'application/json', 
+            'Content-Type': 'multipart/form-data' 
+          },
+          // المهلة الزمنية 15 دقيقة
+          timeout: 900000, 
+          // منع Axios من تحويل الـ FormData تلقائياً لضمان سلامة الملفات الثنائية
+          transformRequest: (data) => data, 
+        }
+      );
+
+      // 5. إرجاع النتيجة كاملة
+      // ملاحظة: الـ response.data سيحتوي الآن على (sampleId, message, results)
+      // حيث أن results تحتوي على فيديوهات التتبع والخرائط الحرارية (Base64)
       return response.data;
+
     } catch (error: any) {
+      if (error.code === 'ECONNABORTED') {
+        console.error("انتهت مهلة الاتصال، المعالجة تستغرق وقتاً طويلاً.");
+      }
       throw error;
     }
   },
@@ -42,7 +70,7 @@ export const surveyService = {
         type: 'audio/x-m4a', // أو audio/mpeg حسب الصيغة
       } as any);
 
-      const response = await axios.post(`http://10.28.2.207:5027/api/ASR`, data, {
+      const response = await axios.post(`http://10.252.172.15:5027/api/ASR`, data, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

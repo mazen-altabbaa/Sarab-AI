@@ -1,20 +1,26 @@
 import React from 'react';
 import { StyleSheet, TextInput } from 'react-native';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
-export const FormInput = ({ style, ...props }: any) => (
-  <TextInput 
-    style={[styles.input, style]} 
-    placeholderTextColor="#b39ddb" 
-    {...props} 
-  />
-);
+export const FormInput = ({ style, ...props }: any) => {
+  const Colors = useThemeColors();
+  const styles = createStyles(Colors);
 
-const styles = StyleSheet.create({
+  return (
+    <TextInput
+      style={[styles.input, style]}
+      placeholderTextColor={Colors.primary}
+      {...props}
+    />
+  );
+};
+
+const createStyles = (Colors: any) => StyleSheet.create({
   input: { 
-    backgroundColor: '#f3f0ff', 
+    backgroundColor: Colors.bgLight,
     padding: 16, 
     borderRadius: 15, 
-    color: '#333',
+    color: Colors.text,
     fontSize: 16
   }
 });

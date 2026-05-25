@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TextInputProps, TouchableOpacity, View } from 'react-native';
-import { Colors } from '../../constants/theme';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface CustomInputProps extends TextInputProps {
   label: string;
@@ -10,6 +10,8 @@ interface CustomInputProps extends TextInputProps {
 
 export const CustomInput = ({ label, isPassword, ...props }: CustomInputProps) => {
   const [secure, setSecure] = useState(isPassword);
+  const Colors = useThemeColors();
+  const styles = createStyles(Colors);
 
   return (
     <View style={styles.container}>
@@ -26,7 +28,7 @@ export const CustomInput = ({ label, isPassword, ...props }: CustomInputProps) =
             <Ionicons
               name={secure ? "eye-off-outline" : "eye-outline"}
               size={22}
-              color="#666"
+              color={Colors.textSecondary}
             />
           </TouchableOpacity>
         )}
@@ -35,18 +37,18 @@ export const CustomInput = ({ label, isPassword, ...props }: CustomInputProps) =
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: any) => StyleSheet.create({
   container: { marginBottom: 20 },
-  label: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 10, marginLeft: 5 },
+  label: { fontSize: 16, fontWeight: 'bold', color: Colors.text, marginBottom: 10, marginLeft: 5 },
   wrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.inputBg || '#f8f9ff',
+    backgroundColor: Colors.inputBg,
     borderRadius: 15,
     paddingHorizontal: 15,
     height: 55,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: Colors.borderPurple,
   },
-  input: { flex: 1, fontSize: 16, color: '#333' },
+  input: { flex: 1, fontSize: 16, color: Colors.text },
 });

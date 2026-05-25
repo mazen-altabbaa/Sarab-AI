@@ -1,7 +1,10 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Audio } from 'expo-av'; 
+import * as FileSystem from 'expo-file-system/legacy';
+import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Alert,
   Keyboard,
@@ -16,15 +19,32 @@ import {
 } from 'react-native';
 
 import { FormInput } from '../../components/survey/formInput';
-import { Colors } from '../../constants/colors';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { useSurveyForm } from '../../hooks/useSurveyForm';
 import { useVideoManager } from '../../hooks/useVideoManager';
 import { surveyService } from '../../services/surveyService';
+import { useUserStore, AnalysisResult } from '../../store/useUserStore';
 
+// حفظ base64 كملف مؤقت وإرجاع file:// URI
+async function saveVideoToCache(base64: string, filename: string): Promise<string> {
+  try {
+    const cleaned = base64.replace(/\s+/g, '');
+    const dir = FileSystem.cacheDirectory ?? 'file:///tmp/';
+    const path = dir + filename;
+    await FileSystem.writeAsStringAsync(path, cleaned, { encoding: 'base64' as any });
+    return path;
+  } catch (e) {
+    console.warn('saveVideoToCache error:', e);
+    return '';
+  }
+}
 
 export default function SurveyScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const params = useLocalSearchParams();
+  const Colors = useThemeColors();
+  const styles = createStyles(Colors);
 
   const { form, updateField, isFormValid } = useSurveyForm();
   const { videos, addVideo, removeVideo } = useVideoManager(2);
@@ -36,8 +56,9 @@ export default function SurveyScreen() {
   useEffect(() => {
     if (params.videoUris) {
       try {
-        const uris = JSON.parse(params.videoUris as string);
-        uris.forEach((uri: string) => addVideo(uri));
+        const urisObj = JSON.parse(params.videoUris as string);
+        if (urisObj.left2right) addVideo(urisObj.left2right);
+        if (urisObj.right2left) addVideo(urisObj.right2left);
       } catch (e) {
         console.error("Error parsing videos:", e);
       }
@@ -48,14 +69,12 @@ export default function SurveyScreen() {
     try {
       const permission = await Audio.requestPermissionsAsync();
       if (permission.status !== 'granted') return;
-
       await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
       const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
       setRecording(recording);
       setIsRecording(true);
     } catch (err) { console.error(err); }
   }
-
 
   async function stopRecording() {
     if (!recording) return;
@@ -64,7 +83,6 @@ export default function SurveyScreen() {
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
       setRecording(null);
-
       if (uri) {
         Alert.alert(
           "تم التسجيل",
@@ -77,11 +95,6 @@ export default function SurveyScreen() {
                 try {
                   setLoading(true);
                   const result = await surveyService.uploadVoiceRecording(uri);
-                  
-
-
-                  console.log("البيانات المستلمة من السيرفر:", JSON.stringify(result, null, 2));
-                  
                   if (result) {
                     if (result.EyeSide || result.eyeside) updateField('EyeSide', result.EyeSide || result.eyeside);
                     if (result.Gender || result.gender) updateField('Gender', result.Gender || result.gender);
@@ -90,7 +103,6 @@ export default function SurveyScreen() {
                     if (result.Status || result.status) updateField('Status', result.Status || result.status);
                     if (result.Profession || result.profession) updateField('Profession', result.Profession || result.profession);
                     if (result.Notes || result.notes) updateField('Notes', result.Notes || result.notes);
-                    
                     Alert.alert("نجاح", "تمت تعبئة البيانات من التسجيل الصوتي.");
                   }
                 } catch (err) {
@@ -103,9 +115,7 @@ export default function SurveyScreen() {
           ]
         );
       }
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error(err); }
   }
 
   const handleUpload = async () => {
@@ -113,14 +123,12 @@ export default function SurveyScreen() {
       Alert.alert("بيانات ناقصة", "يجب توفر فيديوهين لإتمام عملية التحليل.");
       return;
     }
-
     if (!isFormValid()) {
       Alert.alert("تنبيه", "يرجى تعبئة جميع الحقول المطلوبة.");
       return;
     }
 
     setLoading(true); 
-
     try {
       const response = await surveyService.submitSurvey({
         EyeSide: form.EyeSide,
@@ -132,14 +140,58 @@ export default function SurveyScreen() {
         Notes: form.Notes,
       }, videos);
 
-      console.log("Upload Success:", response);
+      const timestamp = new Date().toISOString();
+      const sampleId = response.sampleId;
 
-      Alert.alert("نجاح", "تم رفع العينات والبيانات بنجاح", [
-        { text: "موافق", onPress: () => router.replace('/(tabs)') }
-      ]);
+      const lrRaw = response.results?.trackingVideos?.left2right ?? '';
+      console.log('VIDEO DEBUG - length:', lrRaw.length, '| start:', lrRaw.substring(0, 50));
+
+      let lrUri = response.results?.trackingVideos?.left2right ?? null;
+      let rlUri = response.results?.trackingVideos?.right2left ?? null;
+
+      // حفظ الفيديوهات كملفات محلية
+      if (lrUri && !lrUri.startsWith('file://')) {
+        lrUri = await saveVideoToCache(lrUri, `tracked_lr_${sampleId}.mp4`) || null;
+      }
+      if (rlUri && !rlUri.startsWith('file://')) {
+        rlUri = await saveVideoToCache(rlUri, `tracked_rl_${sampleId}.mp4`) || null;
+      }
+
+      // ✅ حفظ في MediaLibrary للتحقق من صحة الملفات في الجهاز
+      try {
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        if (status === 'granted') {
+          if (lrUri) {
+            await MediaLibrary.saveToLibraryAsync(lrUri);
+            console.log('✅ LR video saved to gallery:', lrUri);
+          }
+          if (rlUri) {
+            await MediaLibrary.saveToLibraryAsync(rlUri);
+            console.log('✅ RL video saved to gallery:', rlUri);
+          }
+        }
+      } catch (mediaErr) {
+        console.warn('MediaLibrary save error:', mediaErr);
+      }
+
+      const finalResult: AnalysisResult = {
+        ...response,
+        timestamp,
+        results: {
+          ...response.results,
+          trackingVideos: lrUri || rlUri
+            ? { left2right: lrUri, right2left: rlUri }
+            : null,
+        },
+      };
+
+      useUserStore.getState().setPendingAnalysisResult(finalResult);
+      useUserStore.getState().addToHistory(finalResult);
+
+      router.push('/');
+
     } catch (error: any) {
-      console.error("Upload Failed:", error);
-      Alert.alert("خطأ في الرفع", "تعذر إرسال البيانات للسيرفر، تأكد من الاتصال.");
+      Alert.alert("خطأ في الرفع", "تعذر إرسال البيانات للسيرفر.");
     } finally {
       setLoading(false); 
     }
@@ -152,23 +204,28 @@ export default function SurveyScreen() {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          <Text style={styles.title}>Sarab Platform</Text>
+          <Text style={styles.title}>{t('survey.title')}</Text>
 
           <TouchableOpacity
-            style={[styles.uploadMainBtn, (videos.length < 2 || !isFormValid()) && styles.disabledBtn]}
+            style={[styles.uploadMainBtn, (videos.length < 2 || !isFormValid() || loading) && styles.disabledBtn]}
             onPress={handleUpload}
+            disabled={loading}
           >
-            <Text style={styles.uploadMainText}>Upload Samples</Text>
+            <Text style={styles.uploadMainText}>
+              {loading ? t('survey.uploading') : t('survey.upload_samples')}
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.formContainer}>
-            <Text style={styles.sectionTitle}>Samples ({videos.length}/2)</Text>
+            <Text style={styles.sectionTitle}>{t('survey.samples', { count: videos.length })}</Text>
 
             {videos.map((uri, index) => (
               <View key={index} style={styles.fileCard}>
                 <View style={styles.fileInfo}>
                   <MaterialCommunityIcons name="video-check" size={24} color={Colors.primary} />
-                  <Text style={styles.fileName} numberOfLines={1}>Sample Video {index + 1}</Text>
+                  <Text style={styles.fileName} numberOfLines={1}>
+                    {index === 0 ? "left2right.mp4" : "right2left.mp4"}
+                  </Text>
                 </View>
                 <TouchableOpacity onPress={() => removeVideo(index)}>
                   <Ionicons name="trash-outline" size={20} color="#ff4d4d" />
@@ -178,20 +235,20 @@ export default function SurveyScreen() {
 
             <View style={styles.divider} />
 
-            <FormInput placeholder="Eye side" value={form.EyeSide} onChangeText={(v: string) => updateField('EyeSide', v)} />
+            <FormInput placeholder={t('survey.eye_side')} value={form.EyeSide} onChangeText={(v: string) => updateField('EyeSide', v)} />
 
             <View style={styles.row}>
-              <FormInput style={{ flex: 1 }} placeholder="Gender" value={form.Gender} onChangeText={(v: string) => updateField('Gender', v)} />
-              <FormInput style={{ flex: 1 }} placeholder="Age" value={form.Age} onChangeText={(v: string) => updateField('Age', v)} keyboardType="numeric" />
+              <FormInput style={{ flex: 1 }} placeholder={t('survey.gender')} value={form.Gender} onChangeText={(v: string) => updateField('Gender', v)} />
+              <FormInput style={{ flex: 1 }} placeholder={t('survey.age')} value={form.Age} onChangeText={(v: string) => updateField('Age', v)} keyboardType="numeric" />
             </View>
 
-            <FormInput placeholder="City" value={form.City} onChangeText={(v: string) => updateField('City', v)} />
-            <FormInput placeholder="State" value={form.Status} onChangeText={(v: string) => updateField('Status', v)} />
-            <FormInput placeholder="Profession" value={form.Profession} onChangeText={(v: string) => updateField('Profession', v)} />
+            <FormInput placeholder={t('survey.city')} value={form.City} onChangeText={(v: string) => updateField('City', v)} />
+            <FormInput placeholder={t('survey.state')} value={form.Status} onChangeText={(v: string) => updateField('Status', v)} />
+            <FormInput placeholder={t('survey.profession')} value={form.Profession} onChangeText={(v: string) => updateField('Profession', v)} />
 
             <FormInput
               style={styles.textArea}
-              placeholder="Additional Notes"
+              placeholder={t('survey.notes')}
               value={form.Notes}
               onChangeText={(v: string) => updateField('Notes', v)}
               multiline
@@ -200,14 +257,19 @@ export default function SurveyScreen() {
 
           <View style={styles.audioSection}>
             <TouchableOpacity
-              onPressIn={startRecording}  
-              onPressOut={stopRecording} 
-              style={[styles.micButton, isRecording && styles.micActive]}
+              onPressIn={startRecording}
+              onPressOut={stopRecording}
+              style={[
+                styles.micButton,
+                isRecording && styles.micActive,
+                loading && styles.disabledMic,
+              ]}
+              disabled={loading}
             >
-              <Ionicons name={isRecording ? "mic" : "mic-outline"} size={35} color="#fff" />
+              <Ionicons name={isRecording ? 'mic' : 'mic-outline'} size={42} color={isRecording ? '#fff' : Colors.primary} />
             </TouchableOpacity>
-            <Text style={styles.micText}>
-              {isRecording ? "جاري التسجيل..." : "اضغط مطولاً للتسجيل"}
+            <Text style={[styles.micText, loading && { color: Colors.placeholder }]}>
+              {isRecording ? t('survey.recording') : t('survey.hold_or_press')}
             </Text>
           </View>
 
@@ -218,49 +280,47 @@ export default function SurveyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  scrollContent: { paddingHorizontal: 25, paddingTop: 50 },
-  title: { fontSize: 26, fontWeight: 'bold', marginBottom: 20, color: '#333', textAlign: 'center' },
-  sectionTitle: { fontSize: 16, fontWeight: '600', color: '#666', marginBottom: 10 },
-  uploadMainBtn: { backgroundColor: Colors.primary || '#b39ddb', paddingVertical: 18, borderRadius: 35, alignItems: 'center', elevation: 4 },
+const createStyles = (Colors: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: Colors.background },
+  scrollContent: { paddingHorizontal: 25, paddingTop: 50, flexGrow: 1, paddingBottom: 50 },
+  title: { fontSize: 26, fontWeight: 'bold', marginBottom: 20, color: Colors.text, textAlign: 'center' },
+  sectionTitle: { fontSize: 16, fontWeight: '600', color: Colors.textSecondary, marginBottom: 10 },
+  uploadMainBtn: { backgroundColor: Colors.primary, paddingVertical: 18, borderRadius: 35, alignItems: 'center', elevation: 4 },
   disabledBtn: { opacity: 0.5 },
   uploadMainText: { color: 'white', fontSize: 20, fontWeight: 'bold' },
   formContainer: { marginTop: 25, gap: 15 },
-  fileCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fcfaff', padding: 15, borderRadius: 15, borderWidth: 1, borderColor: '#e1d7f5' },
+  fileCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.card, padding: 15, borderRadius: 15, borderWidth: 1, borderColor: Colors.borderPurple },
   fileInfo: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  fileName: { fontSize: 14, color: '#333', fontWeight: '500', flex: 1 },
+  fileName: { fontSize: 14, color: Colors.text, fontWeight: '500', flex: 1 },
   row: { flexDirection: 'row', gap: 10 },
-  divider: { height: 1, backgroundColor: '#eee', marginVertical: 10 },
+  divider: { height: 1, backgroundColor: Colors.borderPurple, marginVertical: 10 },
   textArea: { height: 120, textAlignVertical: 'top' },
-
-
-
-
-
-  audioSection: {
-    alignItems: 'center',
-    marginVertical: 30,
-  },
+  audioSection: { alignItems: 'center', marginVertical: 30 },
   micButton: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: Colors.primary, 
+    width: 85,
+    height: 85,
+    borderRadius: 45,
+    backgroundColor: Colors.bgLight,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
+    elevation: 2,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
   },
   micActive: {
-    backgroundColor: '#ff4d4d', 
-    transform: [{ scale: 1.1 }],
+    backgroundColor: '#ff4d4d',
+    transform: [{ scale: 1.08 }],
+    borderColor: '#ff4d4d',
   },
-  micText: {
-    marginTop: 10,
-    color: '#777',
-    fontSize: 14,
+  disabledMic: {
+    backgroundColor: Colors.inputBg,
+    borderColor: Colors.placeholder,
+    elevation: 0,
+    shadowOpacity: 0,
   },
+  micText: { marginTop: 10, color: Colors.textSecondary, fontSize: 14 },
 });

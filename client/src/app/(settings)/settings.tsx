@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, SafeAreaView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
-import { DarkTheme, LightTheme } from '../../constants/theme'; 
+import { DarkTheme, LightTheme } from '../../constants/theme';
 import { useUserStore } from '../../store/useUserStore';
 
 export default function SettingsScreen() {
@@ -13,30 +13,22 @@ export default function SettingsScreen() {
 
   const Colors = theme === 'dark' ? DarkTheme : LightTheme;
   const isDark = theme === 'dark';
+  const languageOptions = ['en', 'ar', 'ja', 'de'] as const;
 
   const toggleLanguage = () => {
-    const newLang = language === 'ar' ? 'en' : 'ar';
-    setLanguage(newLang);
+    const currentIndex = languageOptions.indexOf(language as 'en' | 'ar' | 'ja' | 'de');
+    const nextIndex = (currentIndex + 1) % languageOptions.length;
+    setLanguage(languageOptions[nextIndex]);
   };
 
-  const toggleTheme = () => {
-    setTheme(isDark ? 'light' : 'dark');
-  };
+  const languageLabelKey = language === 'ar'
+    ? 'arabic'
+    : language === 'ja'
+    ? 'japanese'
+    : language === 'de'
+    ? 'german'
+    : 'english';
 
-  const settingsOptions = [
-    { 
-      id: '1', 
-      title: t('settings.password_manager'), 
-      icon: 'key-outline', 
-      route: '/setpassword' 
-    },
-    { 
-      id: '2', 
-      title: t('settings.delete_account'), 
-      icon: 'person-remove-outline', 
-      route: null 
-    },
-  ];
 
   const dynamicStyles = createStyles(Colors);
 
@@ -50,36 +42,25 @@ export default function SettingsScreen() {
       </View>
 
       <View style={dynamicStyles.content}>
-        
         <View style={dynamicStyles.menuItem}>
           <View style={dynamicStyles.menuItemLeft}>
             <View style={dynamicStyles.iconBox}>
-              <Ionicons 
-                name={isDark ? "moon" : "sunny-outline"} 
-                size={22} 
-                color={Colors.primary} 
-              />
+              <Ionicons name={isDark ? 'moon' : 'sunny-outline'} size={22} color={Colors.primary} />
             </View>
             <View>
-              <Text style={dynamicStyles.menuText}>{t('settings.dark_mode') || 'Dark Mode'}</Text>
-              <Text style={dynamicStyles.subText}>
-                {isDark ? t('settings.on') || 'On' : t('settings.off') || 'Off'}
-              </Text>
+              <Text style={dynamicStyles.menuText}>{t('settings.dark_mode')}</Text>
+              <Text style={dynamicStyles.subText}>{isDark ? t('settings.on') : t('settings.off')}</Text>
             </View>
           </View>
           <Switch
             value={isDark}
-            onValueChange={toggleTheme}
+            onValueChange={() => setTheme(isDark ? 'light' : 'dark')}
             trackColor={{ false: '#767577', true: Colors.primary }}
             thumbColor={Platform.OS === 'ios' ? undefined : (isDark ? '#fff' : '#f4f3f4')}
           />
         </View>
 
-        <TouchableOpacity 
-          style={dynamicStyles.menuItem} 
-          onPress={toggleLanguage}
-          activeOpacity={0.7}
-        >
+        <TouchableOpacity style={dynamicStyles.menuItem} onPress={toggleLanguage} activeOpacity={0.7}>
           <View style={dynamicStyles.menuItemLeft}>
             <View style={dynamicStyles.iconBox}>
               <Ionicons name="language-outline" size={22} color={Colors.primary} />
@@ -87,39 +68,24 @@ export default function SettingsScreen() {
             <View>
               <Text style={dynamicStyles.menuText}>{t('settings.language')}</Text>
               <Text style={dynamicStyles.subText}>
-                {language === 'ar' ? 'العربية' : 'English'}
+                {t(`settings.${languageLabelKey}` as const)}
               </Text>
             </View>
           </View>
           <View style={dynamicStyles.langBadge}>
-              <Text style={dynamicStyles.langBadgeText}>{language.toUpperCase()}</Text>
+            <Text style={dynamicStyles.langBadgeText}>{language.toUpperCase()}</Text>
           </View>
         </TouchableOpacity>
 
-        {settingsOptions.map((item) => (
-          <TouchableOpacity 
-            key={item.id} 
-            style={dynamicStyles.menuItem}
-            onPress={() => item.route && router.push(item.route as any)}
-          >
-            <View style={dynamicStyles.menuItemLeft}>
-              <View style={dynamicStyles.iconBox}>
-                <Ionicons name={item.icon as any} size={22} color={Colors.primary} />
-              </View>
-              <Text style={dynamicStyles.menuText}>{item.title}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={Colors.placeholder} />
-          </TouchableOpacity>
-        ))}
       </View>
     </SafeAreaView>
   );
 }
 
 const createStyles = (Colors: any) => StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: Colors.background 
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background
   },
   header: {
     flexDirection: 'row',
@@ -129,10 +95,10 @@ const createStyles = (Colors: any) => StyleSheet.create({
     marginTop: Platform.OS === 'android' ? 40 : 10,
   },
   backButton: { position: 'absolute', left: 20 },
-  headerTitle: { 
-    fontSize: 22, 
-    fontWeight: 'bold', 
-    color: Colors.primary 
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: Colors.primary
   },
   content: { paddingHorizontal: 25, marginTop: 20 },
   menuItem: {
@@ -141,18 +107,18 @@ const createStyles = (Colors: any) => StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 15,
     borderBottomWidth: 0.5,
-    borderBottomColor: Colors.placeholder + '33', 
+    borderBottomColor: Colors.placeholder + '33',
   },
   menuItemLeft: { flexDirection: 'row', alignItems: 'center' },
-  menuText: { 
-    fontSize: 17, 
-    color: Colors.text, 
-    fontWeight: '500' 
+  menuText: {
+    fontSize: 17,
+    color: Colors.text,
+    fontWeight: '500'
   },
-  subText: { 
-    fontSize: 13, 
-    color: Colors.placeholder, 
-    marginTop: 2 
+  subText: {
+    fontSize: 13,
+    color: Colors.placeholder,
+    marginTop: 2
   },
   iconBox: {
     width: 45,

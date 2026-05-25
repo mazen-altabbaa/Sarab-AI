@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Colors } from '../../constants/colors';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 const TAB_ICONS: any = {
   'index': { active: 'home', inactive: 'home-outline' },
@@ -10,6 +10,9 @@ const TAB_ICONS: any = {
 };
 
 export const CustomTabBar = ({ state, navigation }: any) => {
+  const Colors = useThemeColors();
+  const styles = createStyles(Colors);
+
   return (
     <View style={styles.tabBarContainer}>
       {state.routes.map((route: any, index: number) => {
@@ -38,7 +41,7 @@ export const CustomTabBar = ({ state, navigation }: any) => {
             <Ionicons 
               name={isFocused ? currentIcon.active : currentIcon.inactive} 
               size={26} 
-              color={isFocused ? "#fff" : "rgba(255,255,255,0.5)"} 
+              color={isFocused ? Colors.tabBarActive : Colors.tabBarInactive}
             />
           </TouchableOpacity>
         );
@@ -47,20 +50,20 @@ export const CustomTabBar = ({ state, navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: any) => StyleSheet.create({
   tabBarContainer: {
     flexDirection: 'row',
     position: 'absolute',
-    bottom: 25, 
-    left: 20,
-    right: 20,
-    backgroundColor: Colors.primary || '#b39ddb',
-    borderRadius: 35,
-    height: 65, 
+    bottom: 0, 
+    left: 0,
+    right: 0,
+    backgroundColor: Colors.tabBarBackground,
+    // borderRadius: 35,
+    height: 90, 
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.1,
+    shadowOpacity: Colors.background === '#121212' ? 0.35 : 0.1,
     shadowRadius: 10,
     alignItems: 'center',
   },
@@ -69,5 +72,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     height: '100%',
+    top: -20,
+    left: 0,
+    right: 0,
   },
 });

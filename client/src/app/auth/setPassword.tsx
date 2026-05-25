@@ -15,10 +15,12 @@ import {
 } from 'react-native';
 
 import { CustomInput } from '../../components/ui/customInput';
-import { Colors } from '../../constants/theme';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 export default function SetPasswordScreen() {
   const router = useRouter();
+  const Colors = useThemeColors();
+  const styles = createStyles(Colors);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -77,8 +79,8 @@ export default function SetPasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+const createStyles = (Colors: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: Colors.background },
   header: { 
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', 
     height: 60, marginTop: Platform.OS === 'android' ? 40 : 10 
@@ -86,7 +88,7 @@ const styles = StyleSheet.create({
   backButton: { position: 'absolute', left: 20 },
   headerTitle: { fontSize: 22, fontWeight: 'bold', color: Colors.primary },
   content: { paddingHorizontal: 30, paddingTop: 30 },
-  subtitle: { fontSize: 16, color: '#666', marginBottom: 30, textAlign: 'center' },
+  subtitle: { fontSize: 16, color: Colors.textSecondary, marginBottom: 30, textAlign: 'center' },
   button: { 
     backgroundColor: Colors.primary, height: 60, borderRadius: 30, 
     justifyContent: 'center', alignItems: 'center', marginTop: 30,
