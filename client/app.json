@@ -4,7 +4,7 @@
     "slug": "my-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/sarab-ai.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -20,10 +20,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.myapp",
-      "softwareKeyboardLayoutMode": "pan",
-      "navigationBar": {
-        "visible": "sticky-swipe"
-      }
+      "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
       "output": "static",
@@ -46,7 +43,8 @@
       "expo-font",
       "expo-web-browser",
       "expo-secure-store",
-      "expo-localization"
+      "expo-localization",
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,
