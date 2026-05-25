@@ -5,11 +5,15 @@ import { I18nManager } from 'react-native';
 
 import ar from './locales/ar.json';
 import en from './locales/en.json';
+import ja from './locales/ja.json';
+import de from './locales/de.json';
 
 i18n.use(initReactI18next).init({
   resources: {
     en: { translation: en },
     ar: { translation: ar },
+    ja: { translation: ja },
+    de: { translation: de },
   },
   // اكتشاف لغة الجهاز تلقائياً كخيار افتراضي
   lng: Localization.getLocales()[0].languageCode ?? 'en',
