@@ -1,5 +1,8 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
+import { getApiBaseUrl } from './apiConfig';
+
+const BASE_URL = getApiBaseUrl();
 
 export const surveyService = {
   // 1. الواجهة الأولى: إرسال بيانات الاستبيان والفيديوهات
@@ -28,8 +31,8 @@ export const surveyService = {
 
       // 4. إرسال الطلب باستخدام Axios
       const response = await axios.post(
-        `http://10.252.172.15:5027/api/Samples/upload/sarab-ai`, 
-        data, 
+        `${BASE_URL}/api/Samples/upload/sarab-ai`,
+        data,
         {
           headers: { 
             'Accept': 'application/json', 
@@ -70,7 +73,7 @@ export const surveyService = {
         type: 'audio/x-m4a', // أو audio/mpeg حسب الصيغة
       } as any);
 
-      const response = await axios.post(`http://10.252.172.15:5027/api/ASR`, data, {
+      const response = await axios.post(`${BASE_URL}/api/ASR`, data, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

@@ -1,59 +1,39 @@
 {
   "expo": {
-    "name": "my-app",
-    "slug": "my-app",
+    "name": "Sarab Ai",
+    "slug": "sarab-ai",
     "version": "1.0.0",
-    "orientation": "portrait",
     "icon": "./assets/images/sarab-ai.png",
-    "scheme": "myapp",
+    "scheme": "sarabai",
     "userInterfaceStyle": "automatic",
-    "ios": {
-      "icon": "./assets/expo.icon",
-      "supportsTablet": true
-    },
     "android": {
+      "package": "com.anonymous.myapp",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "foregroundImage": "./assets/images/sarab-ai.png",
+        "backgroundImage": "./assets/images/sarab-ai.png"
       },
-      "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.myapp",
-      "softwareKeyboardLayoutMode": "pan"
-    },
-    "web": {
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "backgroundColor": "#208AEF",
-          "image": "./assets/images/splash-icon.png",
-          "resizeMode": "contain",
-          "android": {
-            "image": "./assets/images/splash-icon.png",
-            "imageWidth": 76
-          }
-        }
-      ],
       "expo-font",
       "expo-web-browser",
       "expo-secure-store",
       "expo-localization",
       "expo-video"
     ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+    "cli": {
+      "appVersionSource": "remote"
     },
+    "owner": "ahmad_alsrdah",
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "7cec7bcf-1bd5-45b5-bbd4-e8aae944e0ff"
+        "projectId": "3c621d89-e4a0-4e7f-ba81-7ca55bb5e5f6"
       }
     }
   }

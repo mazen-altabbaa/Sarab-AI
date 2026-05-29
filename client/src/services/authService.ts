@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import { getApiBaseUrl } from './apiConfig';
 
 export type SignupPayload = {
   firstName: string;
@@ -34,11 +35,6 @@ export type StoredAuthData = {
   refreshToken: string | null;
   expiresAt: string | null;
   user: AuthUser | null;
-};
-
-const getApiBaseUrl = () => {
-  const rawUrl = process.env.EXPO_PUBLIC_API_URL ?? 'http://25.19.119.206:5027';
-  return rawUrl.trim().replace(/^['"]|['"]$/g, '');
 };
 
 const BASE_URL = getApiBaseUrl();
