@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libsm6 \
     libxrender1 \
     libxext6 \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 RUN ln -sf /usr/bin/python3.10 /usr/bin/python && \
@@ -23,12 +24,7 @@ COPY requirements/ /tmp/requirements/
 
 RUN --mount=type=cache,target=/pip-cache \
     pip install --cache-dir=/pip-cache \
-    -f https://download.pytorch.org/whl/cu121/torch_stable.html \
-    -r /tmp/requirements/req_torch.txt
-
-RUN --mount=type=cache,target=/pip-cache \
-    pip install --cache-dir=/pip-cache \
-    -r /tmp/requirements/req_transformers.txt
+    -r /tmp/requirements/req_tensorflow.txt
 
 RUN --mount=type=cache,target=/pip-cache \
     pip install --cache-dir=/pip-cache \
@@ -38,23 +34,16 @@ RUN --mount=type=cache,target=/pip-cache \
     pip install --cache-dir=/pip-cache \
     -r /tmp/requirements/req_misc.txt
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY requirements/req_fastapi.txt /tmp/requirements/req_fastapi.txt
 RUN --mount=type=cache,target=/pip-cache \
     pip install --cache-dir=/pip-cache \
     -r /tmp/requirements/req_fastapi.txt
 
-
 WORKDIR /app
-COPY pipeline_segformer.py /app/
 
 RUN mkdir -p /app/vids /app/models /app/output
 
-COPY models/best_segformer_b0_lightbar /app/models/best_segformer_b0_lightbar
+COPY pipeline_vgg16.py /app/pipeline_vgg16.py
 
-COPY pipeline_segformer.py /app/pipeline_segformer.py
+COPY models/vgg16_unet_cornea.h5 /app/models/vgg16_unet_cornea.h5
 
-CMD ["uvicorn", "pipeline_segformer:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "pipeline_vgg16:app", "--host", "0.0.0.0", "--port", "8000"]
