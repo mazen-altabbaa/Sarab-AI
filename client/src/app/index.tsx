@@ -10,7 +10,6 @@ import Animated, {
   withTiming
 } from 'react-native-reanimated';
 
-// استيراد المكونات والثوابت من ملفاتها الجديدة
 import { SarabLogo } from '../components/sarabLogo';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { useUserStore } from '../store/useUserStore';
@@ -22,26 +21,21 @@ export default function UnifiedAuthScreen() {
   const styles = createStyles(Colors);
   const isLoggedIn = useUserStore((state) => state.isLoggedIn);
 
-  // --- قيم الحركة ---
   const contentOpacity = useSharedValue(0); 
   const buttonsOpacity = useSharedValue(0); 
   const buttonsTranslateY = useSharedValue(20); 
 
   useEffect(() => {
-    // 1. ظهور الشعار
     contentOpacity.value = withTiming(1, { duration: 1500 });
 
-    // 2. ظهور الأزرار بعد تأخير (Splash محاكاة)
     buttonsOpacity.value = withDelay(3000, withTiming(1, { duration: 1000 }));
     buttonsTranslateY.value = withDelay(3000, withTiming(0, { duration: 1000 }));
   }, []);
 
-  // ستايل الشعار المتحرك
   const animatedLogoStyle = useAnimatedStyle(() => ({
     opacity: contentOpacity.value,
   }));
 
-  // ستايل الأزرار المتحركة
   const animatedButtonsStyle = useAnimatedStyle(() => ({
     opacity: buttonsOpacity.value,
     transform: [{ translateY: buttonsTranslateY.value }],
@@ -53,14 +47,12 @@ export default function UnifiedAuthScreen() {
 
   return (
     <View style={styles.container}>
-      {/* شريط الحالة بلون التطبيق الأساسي حتى تظهر أيقونات النظام بوضوح */}
       <StatusBar translucent backgroundColor={Colors.primary} barStyle="light-content" />
       
       <LinearGradient
         colors={Colors.gradient}
         style={styles.background}
       >
-        {/* الحاويات المسؤولة عن التموضع (Positioning) */}
         <Animated.View style={[styles.logoPositioner, animatedLogoStyle]}>
           <SarabLogo />
         </Animated.View>
@@ -81,7 +73,6 @@ export default function UnifiedAuthScreen() {
           </TouchableOpacity>
         </Animated.View>
       </LinearGradient>
-      {/* اضفه مؤقتاً في أي مكان */}
       <TouchableOpacity onPress={() => router.push('/(tabs)')}>
         <Text style={{color: 'gray', textAlign: 'center'}}>Debug: Go to Home</Text>
       </TouchableOpacity>
@@ -97,7 +88,6 @@ const createStyles = (Colors: any) => StyleSheet.create({
     flex: 1, 
     alignItems: 'center' 
   },
-  // المسؤول عن وضع الشعار في المنتصف تماماً وبالارتفاع المطلوب
   logoPositioner: {
     position: 'absolute',
     top: '32%',

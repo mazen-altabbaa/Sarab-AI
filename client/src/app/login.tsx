@@ -110,7 +110,6 @@ export default function LoginScreen() {
             {isLoading ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.buttonText}>{t('auth.login')}</Text>}
           </TouchableOpacity>
 
-          {/* Social login removed: Google button hidden per design */}
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>{t('auth.dont_have_account')}</Text>

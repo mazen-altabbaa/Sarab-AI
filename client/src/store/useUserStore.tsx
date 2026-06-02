@@ -14,7 +14,6 @@ export interface AnalysisResult {
       right2left: string | null;
     } | null;
     trackingVideos: {
-      // يمكن أن يكون base64 أو file:// URI بعد الحفظ المحلي
       left2right: string | null;
       right2left: string | null;
     } | null;
@@ -32,7 +31,6 @@ interface UserState {
   pendingAnalysisResult: AnalysisResult | null;
   setPendingAnalysisResult: (result: AnalysisResult | null) => void;
 
-  // نخزن النتائج بدون base64 الفيديو الضخم — فقط المسار المحلي
   analysisHistory: AnalysisResult[];
   addToHistory: (result: AnalysisResult) => void;
   clearHistory: () => void;

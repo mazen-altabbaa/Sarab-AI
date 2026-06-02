@@ -34,7 +34,8 @@
       "router": {},
       "eas": {
         "projectId": "3c621d89-e4a0-4e7f-ba81-7ca55bb5e5f6"
-      }
+      },
+      "EXPO_PUBLIC_API_URL": "http://10.219.67.112:5027"
     }
   }
 }

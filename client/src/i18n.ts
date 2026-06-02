@@ -15,7 +15,6 @@ i18n.use(initReactI18next).init({
     ja: { translation: ja },
     de: { translation: de },
   },
-  // اكتشاف لغة الجهاز تلقائياً كخيار افتراضي
   lng: Localization.getLocales()[0].languageCode ?? 'en',
   fallbackLng: 'en',
   interpolation: {
@@ -23,7 +22,6 @@ i18n.use(initReactI18next).init({
   },
 });
 
-// لدعم الاتجاه من اليمين لليسار في العربية
 export const isRTL = i18n.language === 'ar';
 I18nManager.allowRTL(isRTL);
 I18nManager.forceRTL(isRTL);

@@ -58,7 +58,6 @@ const createStyles = (Colors: any) => StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: Colors.tabBarBackground,
-    // borderRadius: 35,
     height: 90, 
     elevation: 10,
     shadowColor: '#000',

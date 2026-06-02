@@ -25,7 +25,6 @@ import { useVideoManager } from '../../hooks/useVideoManager';
 import { surveyService } from '../../services/surveyService';
 import { useUserStore, AnalysisResult } from '../../store/useUserStore';
 
-// حفظ base64 كملف مؤقت وإرجاع file:// URI
 async function saveVideoToCache(base64: string, filename: string): Promise<string> {
   try {
     const cleaned = base64.replace(/\s+/g, '');
@@ -66,14 +65,26 @@ export default function SurveyScreen() {
   }, [params.videoUris]);
 
   async function startRecording() {
+    if (recording || isRecording) {
+      console.warn('Recording already prepared or in progress.');
+      return;
+    }
+
     try {
-      const permission = await Audio.requestPermissionsAsync();
-      if (permission.status !== 'granted') return;
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
-      const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
-      setRecording(recording);
       setIsRecording(true);
-    } catch (err) { console.error(err); }
+      const permission = await Audio.requestPermissionsAsync();
+      if (permission.status !== 'granted') {
+        setIsRecording(false);
+        return;
+      }
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
+      const { recording: newRecording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
+      setRecording(newRecording);
+      setIsRecording(true);
+    } catch (err) {
+      console.error(err);
+      setIsRecording(false);
+    }
   }
 
   async function stopRecording() {
@@ -149,7 +160,6 @@ export default function SurveyScreen() {
       let lrUri = response.results?.trackingVideos?.left2right ?? null;
       let rlUri = response.results?.trackingVideos?.right2left ?? null;
 
-      // حفظ الفيديوهات كملفات محلية
       if (lrUri && !lrUri.startsWith('file://')) {
         lrUri = await saveVideoToCache(lrUri, `tracked_lr_${sampleId}.mp4`) || null;
       }
@@ -157,7 +167,6 @@ export default function SurveyScreen() {
         rlUri = await saveVideoToCache(rlUri, `tracked_rl_${sampleId}.mp4`) || null;
       }
 
-      // ✅ حفظ في MediaLibrary للتحقق من صحة الملفات في الجهاز
       try {
         const { status } = await MediaLibrary.requestPermissionsAsync();
         if (status === 'granted') {

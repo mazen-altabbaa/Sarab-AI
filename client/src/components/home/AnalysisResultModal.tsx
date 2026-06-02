@@ -21,12 +21,10 @@ interface Props {
   onReset?: () => void;
 }
 
-// ─── تحديد إذا كانت القيمة base64 أم file:// URI ─────────────────
 function isFileUri(value: string): boolean {
   return value.startsWith('file://') || value.startsWith('content://') || value.startsWith('/');
 }
 
-// ─── حفظ base64 كملف مؤقت (fallback إذا وصل base64) ─────────────
 async function saveBase64ToTemp(base64: string, filename: string): Promise<string | null> {
   try {
     const cleaned = base64.replace(/\s+/g, '');
@@ -40,7 +38,6 @@ async function saveBase64ToTemp(base64: string, filename: string): Promise<strin
   }
 }
 
-// ─── مكوّن VideoPlayer (hook دائماً يُستدعى) ─────────────────────
 const VideoPlayer = ({ uri }: { uri: string }) => {
   const player = useVideoPlayer(uri, (p) => {
     p.loop = true;
@@ -59,7 +56,6 @@ const VideoPlayer = ({ uri }: { uri: string }) => {
   );
 };
 
-// ─── مكوّن TrackingVideo: يدعم file:// URI و base64 ──────────────
 const TrackingVideo = ({ value, label, sampleId, side }: {
   value: string;
   label: string;
@@ -77,12 +73,10 @@ const TrackingVideo = ({ value, label, sampleId, side }: {
     setLocalUri(null);
 
     const prepare = async () => {
-      // إذا كان file:// URI جاهز — استخدمه مباشرة
       if (isFileUri(value)) {
         if (!cancelled) { setLocalUri(value); setLoading(false); }
         return;
       }
-      // وإلا احفظ base64 كملف مؤقت
       const path = await saveBase64ToTemp(value, `tracked_${side}_${sampleId}.mp4`);
       if (cancelled) return;
       if (path) setLocalUri(path);
@@ -126,7 +120,6 @@ const vidStyles = StyleSheet.create({
   errorText: { color: '#888', fontSize: 13 },
 });
 
-// ─── مكوّن HeatmapImage ───────────────────────────────────────────
 const HeatmapImage = ({ base64, label }: { base64: string; label: string }) => {
   const [previewVisible, setPreviewVisible] = useState(false);
 
@@ -182,7 +175,6 @@ const imgStyles = StyleSheet.create({
   previewLabel: { position: 'absolute', bottom: 40, color: '#ccc', fontSize: 13, textAlign: 'center' },
 });
 
-// ─── المكوّن الرئيسي ──────────────────────────────────────────────
 export const AnalysisResultModal = ({ visible, onClose, data, onReset }: Props) => {
   const ThemeColors = useThemeColors();
   const styles = createStyles(ThemeColors);

@@ -29,7 +29,6 @@ export default function SetPasswordScreen() {
       Alert.alert("خطأ", "كلمات المرور غير متطابقة");
       return;
     }
-    // منطق الحفظ...
     console.log("Password Set!");
   };
 
@@ -39,7 +38,6 @@ export default function SetPasswordScreen() {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={{ flex: 1 }}>
             
-            {/* Header الموحد */}
             <View style={styles.header}>
               <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                 <Ionicons name="chevron-back" size={28} color={Colors.primary} />
@@ -50,7 +48,6 @@ export default function SetPasswordScreen() {
             <ScrollView contentContainerStyle={styles.content}>
               <Text style={styles.subtitle}>Enter your new password below.</Text>
 
-              {/* استخدام المكون المخصص */}
               <CustomInput 
                 label="Password"
                 placeholder="***************"

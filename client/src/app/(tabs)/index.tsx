@@ -91,7 +91,6 @@ export default function HomeScreen() {
     <View style={dynamicStyles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100, flexGrow: 1 }}>
         
-        {/* Header Section */}
         <View style={dynamicStyles.header}>
           <View style={dynamicStyles.profileSection}>
             <TouchableOpacity onPress={() => router.push('/profile')}>
@@ -125,7 +124,6 @@ export default function HomeScreen() {
           orLabel={t('home.or')}
         />
 
-        {/* Display Area */}
         <View style={dynamicStyles.displayArea}>
           {videos.length > 0 ? (
             <ScrollView 
@@ -160,7 +158,6 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* Start Analysis Button */}
         <View style={dynamicStyles.analysisSection}>
             <TouchableOpacity 
               style={[dynamicStyles.brainIconContainer, isAnalysisDisabled && dynamicStyles.disabledBrain]} 
@@ -180,7 +177,6 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
 
-      {/* Camera Modal */}
       <CameraModal 
         visible={isCameraOpen} 
         onClose={() => setCameraOpen(false)} 
@@ -188,7 +184,6 @@ export default function HomeScreen() {
         videoCount={videos.length}
       />
 
-      {/* Analysis Result Modal */}
       <AnalysisResultModal 
         visible={resultVisible} 
         onClose={() => setResultVisible(false)} 
