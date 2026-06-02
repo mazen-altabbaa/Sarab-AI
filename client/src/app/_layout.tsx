@@ -6,12 +6,15 @@ import { useEffect } from 'react';
 import { Platform, StatusBar, View, AppState } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useThemeColors } from '../hooks/useThemeColors';
-import '../../globals.css';
+import '../../global.css';
 
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? '';
 
 if (!publishableKey) {
-  throw new Error('Add your Clerk Publishable Key to the .env file')
+  // Don't throw during local development — show a clear warning so dev can continue.
+  // In production you should provide a real publishable key via .env or build config.
+  // eslint-disable-next-line no-console
+  console.warn('EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY is not set. Clerk auth will be disabled in this session.');
 }
 
 function AuthSessionBootstrap() {
@@ -41,7 +44,9 @@ export default function RootLayout() {
       return () => sub.remove?.();
     }
   }, []);
-  return <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+  // If publishableKey is missing, render layout without ClerkProvider so app can run in dev.
+  const content = (
+    <>
       <AuthSessionBootstrap />
       <View style={{
         height: Platform.OS === 'android' ? StatusBar.currentHeight ?? 24 : 44,
@@ -50,5 +55,12 @@ export default function RootLayout() {
       }} />
       <StatusBar translucent backgroundColor={Colors.primary} barStyle={Colors.background === '#121212' ? 'light-content' : 'dark-content'} />
       <Stack screenOptions={{headerShown: false}}/>
-    </ClerkProvider>
+    </>
+  );
+
+  return publishableKey ? (
+    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>{content}</ClerkProvider>
+  ) : (
+    content
+  );
 }
