@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { Platform, StatusBar, View, AppState } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useThemeColors } from '../hooks/useThemeColors';
-import '../../globals.css';
+import '../../global.css';
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!
 
