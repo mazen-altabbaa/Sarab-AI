@@ -13,7 +13,7 @@ const extraUrl =
 const rawUrl =
   (typeof envUrl === 'string' && envUrl.trim().replace(/^['"]|['"]$/g, '')) ||
   (typeof extraUrl === 'string' && extraUrl.trim().replace(/^['"]|['"]$/g, '')) ||
-  'http://10.252.172.15:5027';
+  'http://25.19.119.206:5027';
 
 const ANDROID_EMULATOR_LOCALHOST = '10.0.2.2';
 
