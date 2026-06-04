@@ -141,3 +141,22 @@ Both models were trained locally and their notebooks are kept in `pipeline/` for
 docker pull onerahmet/openai-whisper-asr-webservice:latest
 docker tag onerahmet/openai-whisper-asr-webservice:latest whisper-small-cpu:latest
 ```
+
+## Client Application (React Native / Expo)
+This section describes how to set up, run, and export the mobile application client (Sarab AI) for Android.
+
+### 1. Prerequisites & Environment Setup
+The application communicates with the backend via environment variables and utilizes Expo SDK with native modules (Camera, Video, Secure Store).
+
+### 2. Local Development Installation
+To set up local packages and sync dependencies across repository branches after synchronization or merging:
+
+```bash
+cd client
+Install dependencies securely bypassing legacy peer conflicts
+npm install --legacy-peer-deps
+```
+### 3. Run
+```bash
+npx expo start
+```
