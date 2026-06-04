@@ -1,0 +1,9 @@
+output/
+vids/
+*.mkv
+*.mp4
+*.mov
+__pycache__/
+*.pyc
+.env
+.venv/
