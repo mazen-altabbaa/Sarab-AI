@@ -73,9 +73,6 @@ export default function UnifiedAuthScreen() {
           </TouchableOpacity>
         </Animated.View>
       </LinearGradient>
-      <TouchableOpacity onPress={() => router.push('/(tabs)')}>
-        <Text style={{color: 'gray', textAlign: 'center'}}>Debug: Go to Home</Text>
-      </TouchableOpacity>
     </View>
   );
 }
