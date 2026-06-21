@@ -142,7 +142,7 @@ docker pull onerahmet/openai-whisper-asr-webservice:latest
 docker tag onerahmet/openai-whisper-asr-webservice:latest whisper-small-cpu:latest
 ```
 
-## Client Application (React Native / Expo)
+# Client Application (React Native / Expo)
 This section describes how to set up, run, and export the mobile application client (Sarab AI) for Android.
 
 ### 1. Prerequisites & Environment Setup
